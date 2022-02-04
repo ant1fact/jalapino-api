@@ -5,3 +5,4 @@ Flask_SQLAlchemy==2.5.1
 python_jose==3.3.0
 SQLAlchemy==1.4.31
 psycopg2-binary==2.9.3
+black==22.1.0

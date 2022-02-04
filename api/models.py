@@ -108,6 +108,9 @@ class Category(db.Model):
         db.Integer, db.ForeignKey('restaurants.id'), nullable=False
     )
 
+    def format(self):
+        return {'name': self.name, 'items': [item.format() for item in self.items]}
+
 
 items_ingredients = db.Table(
     'items_ingredients',
@@ -140,6 +143,14 @@ class Item(db.Model):
         lazy='subquery',
         backref=db.backref('items', lazy=True),
     )
+
+    def format(self):
+        return {
+            'name': self.name,
+            'description': self.description,
+            'price': self.price,
+            'ingredients': [i.name for i in self.ingredients],
+        }
 
 
 class Ingredient(db.Model):
