@@ -84,6 +84,19 @@ class Restaurant(db.Model):
     categories = db.relationship('Category', backref='restaurant', lazy='subquery')
     orders = db.relationship('Order', backref='restaurant', lazy=True)
 
+    def serialize(self):
+        return {
+            'name': self.name,
+            'logo_uri': self.logo_uri,
+            'description': self.description,
+            'address': self.address,
+            'email': self.email,
+            'phone': self.phone,
+            'website': self.website,
+            'categories': [c.serialize() for c in self.categories],
+            'orders': [o.serialize() for o in self.orders],
+        }
+
 
 class Customer(db.Model):
     __tablename__ = 'customers'
@@ -108,8 +121,8 @@ class Category(db.Model):
         db.Integer, db.ForeignKey('restaurants.id'), nullable=False
     )
 
-    def format(self):
-        return {'name': self.name, 'items': [item.format() for item in self.items]}
+    def serialize(self):
+        return {'name': self.name, 'items': [item.serialize() for item in self.items]}
 
 
 items_ingredients = db.Table(
@@ -144,7 +157,7 @@ class Item(db.Model):
         backref=db.backref('items', lazy=True),
     )
 
-    def format(self):
+    def serialize(self):
         return {
             'name': self.name,
             'description': self.description,

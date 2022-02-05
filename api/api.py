@@ -1,3 +1,5 @@
+import json
+
 from flask import Blueprint, jsonify
 from werkzeug.exceptions import HTTPException
 
@@ -10,35 +12,20 @@ from .models import Restaurant
 
 @api.route('/restaurants')
 def get_restaurants():
-    return jsonify(
-        [
-            {
-                'id': r.id,
-                'name': r.name,
-                'logo_uri': r.logo_uri,
-                'description': r.description,
-            }
-            for r in Restaurant.query.all()
-        ]
-    )
-
-
-@api.route('/restaurants/<id>/menu')
-def get_restaurant_menu(id):
-    return jsonify([c.format() for c in Restaurant.query.get_or_404(id).categories])
+    return jsonify([r.serialize() for r in Restaurant.query.all()])
 
 
 # https://flask.palletsprojects.com/en/2.0.x/errorhandling/#generic-exception-handlers
 @api.errorhandler(HTTPException)
 def handle_exception(e):
-    """Return JSON instead of HTML for HTTP errors."""
+    '''Return JSON instead of HTML for HTTP errors.'''
     # Start with the correct headers and status code from the error
     response = e.get_response()
     # Replace the body with JSON
     response.data = json.dumps(
-        {"code": e.code, "name": e.name, "description": e.description}
+        {'code': e.code, 'name': e.name, 'description': e.description}
     )
-    response.content_type = "application/json"
+    response.content_type = 'application/json'
     return response
 
 
