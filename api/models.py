@@ -86,6 +86,7 @@ class Restaurant(db.Model):
 
     def serialize(self):
         return {
+            'id': self.id,
             'name': self.name,
             'logo_uri': self.logo_uri,
             'description': self.description,
@@ -109,6 +110,15 @@ class Customer(db.Model):
 
     orders = db.relationship('Order', backref='customer', lazy=True)
 
+    def serialize(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'address': self.address,
+            'phone': self.phone,
+            'orders': [o.serialize() for o in self.orders],
+        }
+
 
 class Category(db.Model):
     '''Item category for visual sorting of items in a resturant's item list.'''
@@ -122,7 +132,11 @@ class Category(db.Model):
     )
 
     def serialize(self):
-        return {'name': self.name, 'items': [item.serialize() for item in self.items]}
+        return {
+            'id': self.id,
+            'name': self.name,
+            'items': [item.serialize() for item in self.items],
+        }
 
 
 items_ingredients = db.Table(
@@ -159,10 +173,11 @@ class Item(db.Model):
 
     def serialize(self):
         return {
+            'id': self.id,
             'name': self.name,
             'description': self.description,
             'price': self.price,
-            'ingredients': [i.name for i in self.ingredients],
+            'ingredients': [i.serialize() for i in self.ingredients],
         }
 
 
@@ -170,6 +185,9 @@ class Ingredient(db.Model):
     __tablename__ = 'ingredients'
 
     name = db.Column(db.String(20), unique=True, nullable=False)
+
+    def serialize(self):
+        return {'id': self.id, 'name': self.name}
 
 
 class Order(db.Model):
@@ -186,6 +204,15 @@ class Order(db.Model):
     )
     customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False)
     is_completed = db.Column(db.Boolean, nullable=False)
+
+    def serialize(self):
+        return {
+            'id': self.id,
+            'customer_id': self.customer_id,
+            'restaurant_id': self.restaurant_id,
+            'items': [item.serialize() for item in self.items],
+            'is_completed': self.is_completed,
+        }
 
 
 # Importing create_app after assigning db avoids circular import issue
