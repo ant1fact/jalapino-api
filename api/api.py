@@ -3,7 +3,7 @@ import json
 from flask import Blueprint, jsonify
 from werkzeug.exceptions import HTTPException
 
-from .auth import AuthError
+from .auth import AuthError, requires_auth
 
 api = Blueprint('api', __name__)
 
@@ -14,7 +14,10 @@ from .models import Restaurant
 def get_restaurants():
     return jsonify([r.serialize() for r in Restaurant.query.all()])
 
-@api.route...
+@requires_auth('edit:restaurant')
+@api.route('/restaurants/<int:id>')
+def get_restaurant_details(int: id):
+    pass
 
 # https://flask.palletsprojects.com/en/2.0.x/errorhandling/#generic-exception-handlers
 @api.errorhandler(HTTPException)
