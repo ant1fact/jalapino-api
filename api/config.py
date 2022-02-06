@@ -9,6 +9,7 @@ class Config:
     SQLALCHEMY_DATABASE_URI = getenv('DBURI', 'postgresql:///jalapino')
     SQLALCHEMY_RECORD_QUERIES = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_ECHO = True
 
 class TestConfig(Config):
     SQLALCHEMY_DATABASE_URI = getenv('DBURI_TEST', 'postgresql:///jalapino_test')

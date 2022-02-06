@@ -21,6 +21,11 @@ class CRUDModel(Model):
 
         return db.Column(column_type, primary_key=True)
 
+    def raise_and_rollback(self, e):
+        logging.error(e)
+        db.session.rollback(_capture_exception=True)
+        raise(e)
+
     def create(self) -> int:
         '''Inserts record into database and returns ID if successful, otherwise None.'''
         with app.app_context():
@@ -29,22 +34,20 @@ class CRUDModel(Model):
                 db.session.commit()
                 return self.id
             except Exception as e:
-                logging.error(e)
-                db.session.rollback()
+                self.raise_and_rollback(e)
             finally:
                 db.session.close()
 
     def update(self, data: dict):
         '''Updates record based on a dictionary.'''
         with app.app_context():
+            for k, v in data.items():
+                if k in self.__class__.__dict__.keys():
+                    setattr(self, k, v)
             try:
-                for k, v in data.items():
-                    if k in self.__class__.__dict__.keys():
-                        setattr(self, k, v)
                 db.session.commit()
             except Exception as e:
-                logging.error(e)
-                db.session.rollback()
+                self.raise_and_rollback(e)
             finally:
                 db.session.close()
 
@@ -58,8 +61,7 @@ class CRUDModel(Model):
                     db.session.commit()
                     return id
                 except Exception as e:
-                    logging.error(e)
-                    db.session.rollback()
+                    self.raise_and_rollback(e)
                 finally:
                     db.session.close()
 
@@ -81,8 +83,8 @@ class Restaurant(db.Model):
     phone = db.Column(db.String(50), nullable=False)
     website = db.Column(db.String(250))
 
-    categories = db.relationship('Category', backref='restaurant', lazy='subquery')
-    orders = db.relationship('Order', backref='restaurant', lazy=True)
+    categories = db.relationship('Category', backref='restaurant', lazy=False)
+    orders = db.relationship('Order', backref='restaurant', lazy=False)
 
     def serialize(self):
         return {
@@ -108,7 +110,7 @@ class Customer(db.Model):
     name = db.Column(db.String(50), nullable=False)
     phone = db.Column(db.String(50), nullable=False)
 
-    orders = db.relationship('Order', backref='customer', lazy=True)
+    orders = db.relationship('Order', backref='customer', lazy=False)
 
     def serialize(self):
         return {
@@ -125,7 +127,7 @@ class Category(db.Model):
 
     __tablename__ = 'categories'
 
-    items = db.relationship('Item', backref='group', lazy='subquery')
+    items = db.relationship('Item', backref='group', lazy=False)
     name = db.Column(db.String(50), nullable=False)
     restaurant_id = db.Column(
         db.Integer, db.ForeignKey('restaurants.id'), nullable=False
@@ -167,8 +169,8 @@ class Item(db.Model):
     ingredients = db.relationship(
         'Ingredient',
         secondary=items_ingredients,
-        lazy='subquery',
-        backref=db.backref('items', lazy=True),
+        lazy=False,
+        backref=db.backref('items', lazy=False),
     )
 
     def serialize(self):
@@ -196,8 +198,8 @@ class Order(db.Model):
     items = db.relationship(
         'Item',
         secondary=orders_items,
-        lazy='subquery',
-        backref=db.backref('orders', lazy=True),
+        lazy=False,
+        backref=db.backref('orders', lazy=False),
     )
     restaurant_id = db.Column(
         db.Integer, db.ForeignKey('restaurants.id'), nullable=False

@@ -1,11 +1,10 @@
-# cd backend
-# python -m test_data.populate_db
+# python -m backend.test_data.populate_db
 
 import json
 from pathlib import Path
 
-from api import create_app
-from api.models import Category, Ingredient, Item, Restaurant
+from backend.api import create_app
+from backend.api.models import Category, Ingredient, Item, Restaurant
 
 app = create_app()
 with app.app_context():
@@ -15,7 +14,10 @@ with app.app_context():
         for restaurant in restaurants_data:
             for items in restaurant['categories'].values():
                 for item in items:
-                    ingredients += item['ingredients']
+                    try:
+                        ingredients += item['ingredients']
+                    except KeyError:
+                        continue
         return set(ingredients)
 
     def get_id_by_name(ModelClass, name: str) -> int:
@@ -27,16 +29,15 @@ with app.app_context():
             category_id = c.create()
             for item in categories_data[c.name]:
                 i = Item()
-                i.update(
-                    {
-                        **item,
-                        'category_id': category_id,
-                        'ingredients': [
-                            Ingredient.query.get(get_id_by_name(Ingredient, name))
-                            for name in item['ingredients']
-                        ],
-                    }
-                )
+                updates = {**item, 'category_id': category_id}
+                try:
+                    updates['ingredients'] = [
+                        Ingredient.query.get(get_id_by_name(Ingredient, name))
+                        for name in item['ingredients']
+                    ]
+                except KeyError:
+                    continue
+                i.update(updates)
                 c.items.append(i)
         return categories
 
@@ -51,7 +52,7 @@ with app.app_context():
 
     for restaurant in restaurants_data:
         r = Restaurant()
-        # Temporarily insert empty categories until we get the restaurant ID back
         r.update({**restaurant, 'categories': []})
         r_id = r.create()
-        r.update({'categories': prepare_categories(restaurant['categories'], r_id)})
+        categories = prepare_categories(restaurant['categories'], r_id)
+        r.update({'categories': categories})
