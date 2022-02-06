@@ -14,6 +14,7 @@ from .models import Restaurant
 def get_restaurants():
     return jsonify([r.serialize() for r in Restaurant.query.all()])
 
+@api.route...
 
 # https://flask.palletsprojects.com/en/2.0.x/errorhandling/#generic-exception-handlers
 @api.errorhandler(HTTPException)
