@@ -1,4 +1,4 @@
-# python -m backend.test_data.populate_db
+# python -m backend.data.populate_db
 
 import json
 from pathlib import Path

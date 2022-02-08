@@ -2,6 +2,7 @@ import logging
 
 from flask_sqlalchemy import Model, SQLAlchemy
 from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy import inspect
 
 DEFAULT_LOGO_URI = 'https://raw.githubusercontent.com/ant1fact/jalapino/main/static/images/jalapino_150x150.png'
 
@@ -23,14 +24,17 @@ class CRUDModel(Model):
 
     def raise_and_rollback(self, e):
         logging.error(e)
-        db.session.rollback(_capture_exception=True)
-        raise(e)
+        db.session.rollback()
+        raise e
 
-    def create(self) -> int:
-        '''Inserts record into database and returns ID if successful, otherwise None.'''
+    def save(self) -> int:
+        '''Saves changes to an existing record or adds a new record to the database
+        if it didn't exist and returns its ID on successful creation, otherwise None.'''
         with app.app_context():
             try:
-                db.session.add(self)
+                # Add new object if it didn't exist before
+                if self.id is None:
+                    db.session.add(self)
                 db.session.commit()
                 return self.id
             except Exception as e:
@@ -39,17 +43,10 @@ class CRUDModel(Model):
                 db.session.close()
 
     def update(self, data: dict):
-        '''Updates record based on a dictionary.'''
-        with app.app_context():
-            for k, v in data.items():
-                if k in self.__class__.__dict__.keys():
-                    setattr(self, k, v)
-            try:
-                db.session.commit()
-            except Exception as e:
-                self.raise_and_rollback(e)
-            finally:
-                db.session.close()
+        '''Updates record fields based on a dictionary.'''
+        for k, v in data.items():
+            if k in self.__class__.__dict__.keys():
+                setattr(self, k, v)
 
     def delete(self) -> int:
         '''Deletes record from database and returns ID if successful, otherwise None.'''
@@ -65,6 +62,17 @@ class CRUDModel(Model):
                 finally:
                     db.session.close()
 
+    @classmethod
+    def required_fields(cls):
+        '''Returns column names for the Model where nullable=False'''
+        mapper = inspect(cls)
+        not_required = {'id',}
+        return [
+            c.name
+            for c in mapper.columns
+            if not c.nullable and c.name not in not_required
+        ]
+
 
 db = SQLAlchemy(model_class=CRUDModel)
 
@@ -72,8 +80,7 @@ db = SQLAlchemy(model_class=CRUDModel)
 class Restaurant(db.Model):
     __tablename__ = 'restaurants'
 
-    # Should be unique=True for production but it makes development impractical
-    auth0_id = db.Column(db.String(50), unique=False, nullable=False)
+    auth0_id = db.Column(db.String(50), nullable=False)
 
     name = db.Column(db.String(50), unique=True, nullable=False)
     logo_uri = db.Column(db.String(250), default=DEFAULT_LOGO_URI)
