@@ -51,22 +51,19 @@ class CRUDModel(Model):
     def delete(self) -> int:
         '''Deletes record from database and returns ID if successful, otherwise None.'''
         with app.app_context():
-            # Making sure the record exists before attempting to delete it
-            if self.__class__.query.get(self.id).first() is not None:
-                try:
-                    self.__class__.query.filter_by(id=id).delete()
-                    db.session.commit()
-                    return id
-                except Exception as e:
-                    self.raise_and_rollback(e)
-                finally:
-                    db.session.close()
+            try:
+                self.__class__.query.filter_by(id=self.id).delete()
+                db.session.commit()
+            except Exception as e:
+                self.raise_and_rollback(e)
+            finally:
+                db.session.close()
 
     @classmethod
     def required_fields(cls):
-        '''Returns column names for the Model where nullable=False'''
+        '''Returns column names for the Model class where nullable=False'''
         mapper = inspect(cls)
-        not_required = {'id',}
+        not_required = {'id'}
         return [
             c.name
             for c in mapper.columns
@@ -80,7 +77,8 @@ db = SQLAlchemy(model_class=CRUDModel)
 class Restaurant(db.Model):
     __tablename__ = 'restaurants'
 
-    auth0_id = db.Column(db.String(50), nullable=False)
+    # One restaurant per account (unique=True)
+    auth0_id = db.Column(db.String(50), unique=True, nullable=False)
 
     name = db.Column(db.String(50), unique=True, nullable=False)
     logo_uri = db.Column(db.String(250), default=DEFAULT_LOGO_URI)
@@ -89,9 +87,10 @@ class Restaurant(db.Model):
     email = db.Column(db.String(100), unique=True, nullable=False)
     phone = db.Column(db.String(50), nullable=False)
     website = db.Column(db.String(250))
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
 
-    categories = db.relationship('Category', backref='restaurant', lazy=False)
-    orders = db.relationship('Order', backref='restaurant', lazy=False)
+    categories = db.relationship('Category', backref='restaurant')
+    orders = db.relationship('Order', backref='restaurant')
 
     def serialize(self):
         return {
@@ -111,13 +110,15 @@ class Restaurant(db.Model):
 class Customer(db.Model):
     __tablename__ = 'customers'
 
+    # One customer per account (unique=True)
     auth0_id = db.Column(db.String(50), unique=True, nullable=False)
 
     address = db.Column(db.String(250), nullable=False)
     name = db.Column(db.String(50), nullable=False)
     phone = db.Column(db.String(50), nullable=False)
-
-    orders = db.relationship('Order', backref='customer', lazy=False)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    
+    orders = db.relationship('Order', backref='customer')
 
     def serialize(self):
         return {
@@ -134,7 +135,7 @@ class Category(db.Model):
 
     __tablename__ = 'categories'
 
-    items = db.relationship('Item', backref='group', lazy=False)
+    items = db.relationship('Item', backref='group')
     name = db.Column(db.String(50), nullable=False)
     restaurant_id = db.Column(
         db.Integer, db.ForeignKey('restaurants.id'), nullable=False
@@ -177,7 +178,7 @@ class Item(db.Model):
         'Ingredient',
         secondary=items_ingredients,
         lazy=False,
-        backref=db.backref('items', lazy=False),
+        backref=db.backref('items'),
     )
 
     def serialize(self):
@@ -203,10 +204,7 @@ class Order(db.Model):
     __tablename__ = 'orders'
 
     items = db.relationship(
-        'Item',
-        secondary=orders_items,
-        lazy=False,
-        backref=db.backref('orders', lazy=False),
+        'Item', secondary=orders_items, lazy=False, backref=db.backref('orders')
     )
     restaurant_id = db.Column(
         db.Integer, db.ForeignKey('restaurants.id'), nullable=False

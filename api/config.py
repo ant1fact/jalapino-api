@@ -11,7 +11,7 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = False  # Keeping for future reference
 
-    RESTAURANTS_PER_PAGE = 10
+    RESULTS_PER_PAGE = 10
 
 
 class TestConfig(Config):
