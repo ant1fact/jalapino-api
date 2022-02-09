@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, session
 from flask_cors import CORS
 from flask_migrate import Migrate
 
@@ -18,6 +18,11 @@ def create_app(config=config.Config):
     from .api import api
 
     app.register_blueprint(api)
+
+    
+    @app.before_first_request
+    def before_first_request():
+        session['basket'] = []
 
     @app.after_request
     def after_request(response):

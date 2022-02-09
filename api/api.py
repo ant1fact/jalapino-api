@@ -26,11 +26,6 @@ def root():
     }
 
 
-@api.before_first_request
-def before_first_request():
-    session['basket'] = []
-
-
 ### RESTAURANTS ###
 
 
