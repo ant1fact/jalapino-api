@@ -92,7 +92,8 @@ class Restaurant(db.Model):
     is_active = db.Column(db.Boolean, default=True, nullable=False)
 
     categories = db.relationship(
-        'Category', backref='restaurant', cascade='all, delete-orphan', lazy=False)
+        'Category', backref='restaurant', cascade='all, delete-orphan', lazy=False
+    )
     orders = db.relationship('Order', backref='restaurant')
 
     def serialize(self):
@@ -138,7 +139,9 @@ class Category(db.Model):
 
     __tablename__ = 'categories'
 
-    items = db.relationship('Item', backref='category', cascade='all, delete-orphan', lazy=False)
+    items = db.relationship(
+        'Item', backref='category', cascade='all, delete-orphan', lazy=False
+    )
     name = db.Column(db.String(50), nullable=False)
     restaurant_id = db.Column(
         db.Integer, db.ForeignKey('restaurants.id'), nullable=False

@@ -11,7 +11,6 @@ from .config import Config
 from .models import Category, Customer, Ingredient, Item, Order, Restaurant
 
 
-
 @api.route('/')
 def root():
     return {
@@ -26,9 +25,11 @@ def root():
         'license': {'name': 'MIT', 'url': 'https://spdx.org/licenses/MIT.html'},
     }
 
+
 @api.before_first_request
 def before_first_request():
     session['basket'] = []
+
 
 ### RESTAURANTS ###
 
@@ -294,13 +295,16 @@ def delete_item(payload: dict, id: int):
     item.delete()
     return Response(status=200)
 
+
 @api.route('/ingredients')
 def get_ingredients():
     return jsonify([i.serialize() for i in Ingredient.query.all()])
 
+
 @api.route('/ingredients/<int:id>')
 def get_ingredient(id: int):
     return Ingredient.query.get_or_404(id).serialize()
+
 
 @api.route('/ingredients/<int:id>', methods=['DELETE'])
 @requires_auth('admin')
@@ -308,6 +312,7 @@ def delete_ingredient(id: int):
     ingredient = Ingredient.query.get_or_404(id)
     ingredient.delete()
     return Response(status=200)
+
 
 @api.route('/ingredients/<int:id>/items')
 def get_items_by_ingredient(id: int):
@@ -324,6 +329,7 @@ def get_orders():
     '''Get all past orders paginated.'''
     return jsonify([o.serialize() for o in Order.query.all()])
 
+
 @api.route('/customers/<int:id>/basket', methods=['POST'])
 @requires_auth('create:order')
 def add_item_to_basket(payload: dict, id: int):
@@ -335,6 +341,7 @@ def add_item_to_basket(payload: dict, id: int):
         abort(400)
     session['basket'].append(item_id)
     return Response(status=200)
+
 
 @api.route('/customers/<int:id>/basket')
 @requires_auth('read:order')
@@ -358,6 +365,7 @@ def submit_order(payload: dict, id: int):
     new_order.save()
     return {'id': new_order.id}, 201
 
+
 @api.route('/customers/<int:id>/orders')
 @requires_auth('read:order')
 def get_customer_orders(payload: dict, id: int):
@@ -367,6 +375,7 @@ def get_customer_orders(payload: dict, id: int):
         abort(403)
     return jsonify([o.serialize() for o in customer.orders])
 
+
 @api.route('/restaurants/<int:id>/orders')
 @requires_auth('read:order')
 def get_restaurant_orders(payload: dict, id: int):
@@ -375,6 +384,7 @@ def get_restaurant_orders(payload: dict, id: int):
     if restaurant.auth0_id != payload['sub']:
         abort(403)
     return jsonify([o.serialize() for o in restaurant.orders])
+
 
 @api.route('/orders/<int:id>', methods=['DELETE'])
 @requires_auth('admin')
