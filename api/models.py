@@ -1,5 +1,3 @@
-import logging
-
 from flask_sqlalchemy import Model, SQLAlchemy
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy import inspect
@@ -22,8 +20,8 @@ class CRUDModel(Model):
 
         return db.Column(column_type, primary_key=True)
 
-    def raise_and_rollback(self, e):
-        logging.error(e)
+    def _raise_and_rollback(self, e):
+        app.logger.error(e)
         db.session.rollback()
         raise e
 
@@ -38,7 +36,7 @@ class CRUDModel(Model):
                 db.session.commit()
                 return self.id
             except Exception as e:
-                self.raise_and_rollback(e)
+                self._raise_and_rollback(e)
             finally:
                 db.session.close()
 
@@ -55,20 +53,23 @@ class CRUDModel(Model):
                 self.__class__.query.filter_by(id=self.id).delete()
                 db.session.commit()
             except Exception as e:
-                self.raise_and_rollback(e)
+                self._raise_and_rollback(e)
             finally:
                 db.session.close()
 
     @classmethod
-    def required_fields(cls):
+    def required_fields(cls, method='POST'):
         '''Returns column names for the Model class where nullable=False'''
         mapper = inspect(cls)
         not_required = {'id'}
-        return [
-            c.name
-            for c in mapper.columns
-            if not c.nullable and c.name not in not_required
-        ]
+        if method == 'POST':
+            return [
+                c.name
+                for c in mapper.columns
+                if not c.nullable and c.name not in not_required
+            ]
+        if method == 'PUT':
+            return [c.name for c in mapper.columns if c.name not in not_required]
 
 
 db = SQLAlchemy(model_class=CRUDModel)
@@ -78,7 +79,8 @@ class Restaurant(db.Model):
     __tablename__ = 'restaurants'
 
     # One restaurant per account (unique=True)
-    auth0_id = db.Column(db.String(50), unique=True, nullable=False)
+    # ! unique=False for development only
+    auth0_id = db.Column(db.String(50), unique=False, nullable=False)
 
     name = db.Column(db.String(50), unique=True, nullable=False)
     logo_uri = db.Column(db.String(250), default=DEFAULT_LOGO_URI)
@@ -89,7 +91,8 @@ class Restaurant(db.Model):
     website = db.Column(db.String(250))
     is_active = db.Column(db.Boolean, default=True, nullable=False)
 
-    categories = db.relationship('Category', backref='restaurant')
+    categories = db.relationship(
+        'Category', backref='restaurant', cascade='all, delete-orphan', lazy=False)
     orders = db.relationship('Order', backref='restaurant')
 
     def serialize(self):
@@ -117,7 +120,7 @@ class Customer(db.Model):
     name = db.Column(db.String(50), nullable=False)
     phone = db.Column(db.String(50), nullable=False)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
-    
+
     orders = db.relationship('Order', backref='customer')
 
     def serialize(self):
@@ -135,7 +138,7 @@ class Category(db.Model):
 
     __tablename__ = 'categories'
 
-    items = db.relationship('Item', backref='group')
+    items = db.relationship('Item', backref='category', cascade='all, delete-orphan', lazy=False)
     name = db.Column(db.String(50), nullable=False)
     restaurant_id = db.Column(
         db.Integer, db.ForeignKey('restaurants.id'), nullable=False
@@ -177,8 +180,8 @@ class Item(db.Model):
     ingredients = db.relationship(
         'Ingredient',
         secondary=items_ingredients,
-        lazy=False,
-        backref=db.backref('items'),
+        lazy='subquery',
+        backref=db.backref('items', lazy=True),
     )
 
     def serialize(self):
@@ -204,7 +207,10 @@ class Order(db.Model):
     __tablename__ = 'orders'
 
     items = db.relationship(
-        'Item', secondary=orders_items, lazy=False, backref=db.backref('orders')
+        'Item',
+        secondary=orders_items,
+        lazy='subquery',
+        backref=db.backref('orders', lazy=True),
     )
     restaurant_id = db.Column(
         db.Integer, db.ForeignKey('restaurants.id'), nullable=False

@@ -1,6 +1,7 @@
 [
     {
         "auth0_id": "auth0|61f848d190b60f0070f2f294",
+        "is_active": true,
         "name": "Not Necessarily BBQ",
         "logo_uri": "https://raw.githubusercontent.com/ant1fact/jalapino/main/static/images/food-g9be06d40f_640.jpg",
         "description": "It's not all sunshine and BBQ!",
@@ -513,6 +514,7 @@
     },
     {
         "auth0_id": "auth0|61f848d190b60f0070f2f294",
+        "is_active": true,
         "name": "The Confused Chef",
         "logo_uri": "https://raw.githubusercontent.com/ant1fact/jalapino/main/static/images/food-ga4666f1ca_640.jpg",
         "description": "He used to have a hat, now he's a confused chef!",
@@ -844,6 +846,7 @@
     },
     {
         "auth0_id": "auth0|61f848d190b60f0070f2f294",
+        "is_active": true,
         "name": "U10 Seals",
         "logo_uri": "https://raw.githubusercontent.com/ant1fact/jalapino/main/static/images/shish-kebab-g4afb5ccab_640.jpg",
         "description": "Formerly known as Kee Chen Where",

@@ -1,10 +1,11 @@
-# python -m backend.data.populate_db
+# cd backend
+# python -m data.populate_db
 
 import json
 from pathlib import Path
 
-from backend.api import create_app
-from backend.api.models import Category, Ingredient, Item, Restaurant
+from api import create_app
+from api.models import Category, Ingredient, Item, Restaurant
 
 app = create_app()
 with app.app_context():
@@ -26,7 +27,7 @@ with app.app_context():
     def prepare_categories(categories_data: dict, r_id: int) -> list:
         categories = [Category(name=c, restaurant_id=r_id) for c in categories_data]
         for c in categories:
-            category_id = c.create()
+            category_id = c.save()
             for item in categories_data[c.name]:
                 i = Item()
                 updates = {**item, 'category_id': category_id}
@@ -38,7 +39,9 @@ with app.app_context():
                 except KeyError:
                     continue
                 i.update(updates)
+                i.save()
                 c.items.append(i)
+                c.save()
         return categories
 
     restaurants_json_path: Path = Path(__file__).parent / 'restaurants.json'
@@ -48,11 +51,12 @@ with app.app_context():
     ingredients = get_unique_ingredients(restaurants_data)
     ingredients_transient = [Ingredient(name=i) for i in ingredients]
     for i in ingredients_transient:
-        i.create()
+        i.save()
 
     for restaurant in restaurants_data:
         r = Restaurant()
         r.update({**restaurant, 'categories': []})
-        r_id = r.create()
+        r_id = r.save()
         categories = prepare_categories(restaurant['categories'], r_id)
         r.update({'categories': categories})
+        r.save()

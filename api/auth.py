@@ -20,9 +20,10 @@ class AuthError(Exception):
 
 
 def get_token_from_header():
+    # sourcery skip: inline-immediately-returned-variable
     '''Obtains Access Token from the Authorization Header'''
     auth = request.headers.get('Authorization', None)
-    if not auth:
+    if auth is None:
         raise AuthError(
             {
                 'code': 'authorization_header_missing',
@@ -54,8 +55,8 @@ def get_token_from_header():
             401,
         )
 
-    # return token
-    return parts[1]
+    token = parts[1]
+    return token
 
 
 def verify_decode_jwt(token):
@@ -131,7 +132,6 @@ def check_permission(permission, payload):
         raise AuthError(
             {'code': 'unauthorized', 'description': 'Permission not found.'}, 403
         )
-    return True
 
 
 def requires_auth(permission=''):
