@@ -48,7 +48,7 @@ def get_restaurant(id: int):
 
 @api.route('/restaurants', methods=['POST'])
 @requires_auth('create:restaurant')
-def create_restaurant(payload):
+def create_restaurant(payload: dict):
     '''Create a restaurant resource once per auth0 restaurant registration.'''
     # If requester's auth0 id already exists, return the associated resource instead
     restaurant = Restaurant.query.filter_by(auth0_id=payload['sub']).first()
@@ -74,10 +74,17 @@ def create_restaurant(payload):
 @requires_auth('update:restaurant')
 def update_restaurant(payload: dict, id: int):
     restaurant = Restaurant.get_or_404(id)
-    # Check that requester is the owner of the resource
+    # Validate ownership of data
     if restaurant.auth0_id != payload['sub']:
         abort(403)
     body = request.get_json()
+    # Prevent undesired modification to child objects of restaurant
+    # by removing any references to these from the request body
+    for key in {'categories', 'orders'}:
+        try:
+            del body[key]
+        except KeyError:
+            continue
     restaurant.update(body)
     restaurant.save()
     return Response(status=200)
@@ -86,6 +93,7 @@ def update_restaurant(payload: dict, id: int):
 @api.route('/restaurants/<int:id>', methods=['DELETE'])
 @requires_auth('admin')
 def delete_restaurant(id: int):
+    '''Admin delete a restaurant record that has been deactivated by its owner.'''
     restaurant = Restaurant.query.get_or_404(id)
     restaurant.delete()
     return Response(status=200)
@@ -117,7 +125,7 @@ def get_customer(payload: dict, id: int):
 
 @api.route('/customers', methods=['POST'])
 @requires_auth('create:customer')
-def create_customer(payload):
+def create_customer(payload: dict):
     '''Create a customer resource once per auth0 customer registration.'''
     # If requester's auth0 id already exists, return the associated resource instead
     customer = Customer.query.filter_by(auth0_id=payload['sub']).first()
@@ -143,10 +151,16 @@ def create_customer(payload):
 @requires_auth('update:customer')
 def update_customer(payload: dict, id: int):
     customer = Customer.get_or_404(id)
-    # Check that requester is the owner of the resource
+    # Validate ownership of data
     if customer.auth0_id != payload['sub']:
         abort(403)
     body = request.get_json()
+    # Prevent undesired modification to child objects of customer
+    # by removing any references to these from the request body
+    try:
+        del body['orders']
+    except KeyError:
+        pass
     customer.update(body)
     customer.save()
     return Response(status=200)
@@ -155,6 +169,7 @@ def update_customer(payload: dict, id: int):
 @api.route('/customers/<int:id>', methods=['DELETE'])
 @requires_auth('admin')
 def delete_customer(id: int):
+    '''Admin delete a customer record that has been deactivated by its owner.'''
     customer = Customer.query.get_or_404(id)
     customer.delete()
     return Response(status=200)
@@ -172,21 +187,44 @@ def get_restaurant_categories(id: int):
 @api.route('/restaurants/<int:id>/categories', methods=['POST'])
 @requires_auth('create:category')
 def create_category(payload: dict, id: int):
+    '''Create new category under the parent restaurant resource.'''
     restaurant = Restaurant.get_or_404(id)
     if restaurant.auth0_id != payload['sub']:
         abort(403)
     body = request.get_json()
-    # Require minimum information for creating a new category
-    if body.get('restaurant_id', 0) != restaurant.id or not body.get('name', ''):
+    if not body.get('name', ''):
         abort(400)
-    # Create new category
     new_category = Category()
-    new_category.update(body)
+    new_category.restaurant_id = restaurant.id
+    new_category.name = body['name']
     new_category.save()
-    # Bind new category to parent restaurant
-    restaurant.categories.append(new_category)
-    restaurant.save()
     return {'id': new_category.id}, 201
+
+
+@api.route('/restaurants/<int:id>/categories', methods=['PUT', 'PATCH'])
+@requires_auth('update:category')
+def update_category(payload: dict, id: int):
+    category = Category.query.get_or_404(id)
+    restaurant = Restaurant.query.get_or_404(category.restaurant_id)
+    # Validate ownership of data
+    if restaurant.auth0_id != payload['sub']:
+        abort(403)
+    body = request.get_json()
+    # Prevent undesired modification to child objects of category
+    # by removing any references to these from the request body
+    try:
+        del body['items']
+    except KeyError:
+        pass
+    # -- PREFLIGHT PUT --
+    if request.method == 'PUT':
+        for field in Category.required_fields(method='PUT'):
+            if field not in body:
+                abort(400)
+    # -- PERFORM PUT / PATCH --
+    category.update(body)
+    category.save()
+    return Response(status=200)
 
 
 ### ITEMS AND INGREDIENTS ###
@@ -233,10 +271,14 @@ def create_item(payload: dict, id: int):
     if body.get('ingredients', []):
         # Remove original ingredients list from message body using .pop()
         # so it doesn't revert when calling .update() on new_item
-        new_item.ingredients = [
-            get_or_create_ingredient(ingredient_name)
-            for ingredient_name in body.pop('ingredients')
-        ]
+        try:
+            new_item.ingredients = [
+                get_or_create_ingredient(ingredient['name'])
+                for ingredient in body.pop('ingredients')
+            ]
+        except Exception as e:
+            api.logger.error(e)
+            abort(400)
     # Add remaining data to transient Item record
     new_item.update(body)
     new_item.save()
@@ -266,8 +308,8 @@ def update_item(payload: dict, id: int):
             # Remove original ingredients list from message body using .pop() so it won't
             # override the fetched Ingredient records when calling .update() on new_item
             item.ingredients = [
-                get_or_create_ingredient(ingredient_name)
-                for ingredient_name in body.pop('ingredients')
+                get_or_create_ingredient(ingredient['name'])
+                for ingredient in body.pop('ingredients')
             ]
         except Exception as e:
             api.logger.error(e)
@@ -353,10 +395,15 @@ def submit_order(payload: dict, id: int):
     customer = Customer.query.get_or_404(id)
     if customer.auth0_id != payload['sub']:
         abort(403)
+    # Check if basket is empty
     if not session['basket']:
         abort(422)
     new_order = Order()
-    # TODO add items from session & customer/restaurant IDs to new_order
+    new_order.items = [Item.query.get_or_404(item_id) for item_id in session['basket']]
+    new_order.customer_id = customer.id
+    new_order.restaurant_id = Category.query.get_or_404(
+        new_order.items[0].category_id
+    ).restaurant_id
     new_order.save()
     return {'id': new_order.id}, 201
 
