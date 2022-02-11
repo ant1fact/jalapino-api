@@ -76,7 +76,8 @@ CREATE TABLE public.customers (
     name character varying(50) NOT NULL,
     phone character varying(50) NOT NULL,
     is_active boolean NOT NULL,
-    id integer NOT NULL
+    id integer NOT NULL,
+    email character varying(100) NOT NULL
 );
 
 
@@ -194,7 +195,6 @@ ALTER TABLE public.items_ingredients OWNER TO nullfame;
 CREATE TABLE public.orders (
     restaurant_id integer NOT NULL,
     customer_id integer NOT NULL,
-    is_completed boolean NOT NULL,
     id integer NOT NULL
 );
 
@@ -324,7 +324,7 @@ ALTER TABLE ONLY public.restaurants ALTER COLUMN id SET DEFAULT nextval('public.
 --
 
 COPY public.alembic_version (version_num) FROM stdin;
-e406d9c4be3f
+98493dbbb085
 \.
 
 
@@ -352,7 +352,10 @@ Drinks	3	12
 -- Data for Name: customers; Type: TABLE DATA; Schema: public; Owner: nullfame
 --
 
-COPY public.customers (auth0_id, address, name, phone, is_active, id) FROM stdin;
+COPY public.customers (auth0_id, address, name, phone, is_active, id, email) FROM stdin;
+auth0|test	99 Some St., Town, State	TEST	1-234-5678910	t	3	test@test.com
+auth0|test2	99 Some St., Town, State	TEST2	1-234-5678910	t	5	test2@test.com
+auth0|test3	99 Some St., Town, State	TEST3	1-234-5678910	t	6	test3@test.com
 \.
 
 
@@ -1079,7 +1082,7 @@ COPY public.items_ingredients (item_id, ingredient_id) FROM stdin;
 -- Data for Name: orders; Type: TABLE DATA; Schema: public; Owner: nullfame
 --
 
-COPY public.orders (restaurant_id, customer_id, is_completed, id) FROM stdin;
+COPY public.orders (restaurant_id, customer_id, id) FROM stdin;
 \.
 
 
@@ -1113,7 +1116,7 @@ SELECT pg_catalog.setval('public.categories_id_seq', 12, true);
 -- Name: customers_id_seq; Type: SEQUENCE SET; Schema: public; Owner: nullfame
 --
 
-SELECT pg_catalog.setval('public.customers_id_seq', 1, false);
+SELECT pg_catalog.setval('public.customers_id_seq', 6, true);
 
 
 --
@@ -1166,6 +1169,14 @@ ALTER TABLE ONLY public.categories
 
 ALTER TABLE ONLY public.customers
     ADD CONSTRAINT customers_auth0_id_key UNIQUE (auth0_id);
+
+
+--
+-- Name: customers customers_email_key; Type: CONSTRAINT; Schema: public; Owner: nullfame
+--
+
+ALTER TABLE ONLY public.customers
+    ADD CONSTRAINT customers_email_key UNIQUE (email);
 
 
 --
