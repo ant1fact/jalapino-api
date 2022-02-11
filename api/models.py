@@ -1,75 +1,66 @@
 from flask_sqlalchemy import Model, SQLAlchemy
-from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy import inspect
 
 DEFAULT_LOGO_URI = 'https://raw.githubusercontent.com/ant1fact/jalapino/main/static/images/jalapino_150x150.png'
+PROTECTED_COLUMN_NAMES = {'id', 'auth0_id'}
 
 
 class CRUDModel(Model):
-    '''Extended model with integer ID primary key and C(R)UD methods.'''
-
-    # https://flask-sqlalchemy.palletsprojects.com/en/2.x/customizing/#model-class
-    @declared_attr
-    def id(cls):
-        for base in cls.__mro__[1:-1]:
-            if getattr(base, '__table__', None) is not None:
-                column_type = db.ForeignKey(base.id)
-                break
-        else:
-            column_type = db.Integer
-
-        return db.Column(column_type, primary_key=True)
-
-    def _raise_and_rollback(self, e):
-        app.logger.error(e)
-        db.session.rollback()
-        raise e
+    '''Extended model with C(R)UD methods.'''
 
     def save(self) -> int:
-        '''Saves changes to an existing record or adds a new record to the database
-        if it didn't exist and returns its ID on successful creation, otherwise None.'''
-        with app.app_context():
-            try:
-                # Add new object if it didn't exist before
-                if self.id is None:
-                    db.session.add(self)
-                db.session.commit()
-                return self.id
-            except Exception as e:
-                self._raise_and_rollback(e)
-            finally:
-                db.session.close()
+        '''Save changes to an existing record or add a new record to the database
+        if it didn't exist and return its ID on successful creation, otherwise None.'''
+        try:
+            if inspect(self).transient:
+                db.session.add(self)
+            db.session.commit()
+            return self.id
+        except Exception as error:
+            db.session.rollback()
+            return error
+        finally:
+            db.session.close()
 
     def update(self, data: dict):
-        '''Updates record fields based on a dictionary.'''
+        '''Update row data based on a dictionary.'''
         for k, v in data.items():
-            if k in self.__class__.__dict__.keys():
+            mapper = inspect(self.__class__)
+            column_names = [
+                c.name for c in mapper.columns if c.name not in PROTECTED_COLUMN_NAMES
+            ]
+            if k in column_names:
+                # It is important to use setattr() instead of directly setting the value
+                # on the self, otherwise the changes cannot be tracked by SQLAlchemy
                 setattr(self, k, v)
 
     def delete(self) -> int:
-        '''Deletes record from database and returns ID if successful, otherwise None.'''
-        with app.app_context():
-            try:
-                self.__class__.query.filter_by(id=self.id).delete()
-                db.session.commit()
-            except Exception as e:
-                self._raise_and_rollback(e)
-            finally:
-                db.session.close()
+        '''Delete record from database and return ID if successful, otherwise None.'''
+        try:
+            self.__class__.query.filter_by(id=self.id).delete()
+        except Exception as error:
+            db.session.rollback()
+            return error
+        finally:
+            db.session.close()
 
     @classmethod
-    def required_fields(cls, method='POST'):
-        '''Returns column names for the Model class where nullable=False'''
+    def defaults(cls):
+        '''Return a dict of of <column name>:<default value> pairs for the given Model.
+        If no default value is specified, the value will be None instead.'''
         mapper = inspect(cls)
-        not_required = {'id'}
-        if method == 'POST':
-            return [
-                c.name
-                for c in mapper.columns
-                if not c.nullable and c.name not in not_required
-            ]
-        if method == 'PUT':
-            return [c.name for c in mapper.columns if c.name not in not_required]
+
+        def _get_column_default_value(col):
+            try:
+                return col.default.arg
+            except AttributeError:
+                return None
+
+        return {
+            col.name: _get_column_default_value(col)
+            for col in mapper.columns
+            if col.name not in PROTECTED_COLUMN_NAMES
+        }
 
 
 db = SQLAlchemy(model_class=CRUDModel)
@@ -82,13 +73,14 @@ class Restaurant(db.Model):
     # ! unique=False for development only
     auth0_id = db.Column(db.String(50), unique=False, nullable=False)
 
+    id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), unique=True, nullable=False)
     logo_uri = db.Column(db.String(250), default=DEFAULT_LOGO_URI)
-    description = db.Column(db.String(250))
+    description = db.Column(db.String(250), default='')
     address = db.Column(db.String(250), nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     phone = db.Column(db.String(50), nullable=False)
-    website = db.Column(db.String(250))
+    website = db.Column(db.String(250), default='')
     is_active = db.Column(db.Boolean, default=True, nullable=False)
 
     categories = db.relationship(
@@ -100,11 +92,11 @@ class Restaurant(db.Model):
         return {
             'id': self.id,
             'name': self.name,
-            'logo_uri': self.logo_uri,
-            'description': self.description,
+            'phone': self.phone,
             'address': self.address,
             'email': self.email,
-            'phone': self.phone,
+            'logo_uri': self.logo_uri,
+            'description': self.description,
             'website': self.website,
             'categories': [c.serialize() for c in self.categories],
             'orders': [o.serialize() for o in self.orders],
@@ -117,9 +109,11 @@ class Customer(db.Model):
     # One customer per account (unique=True)
     auth0_id = db.Column(db.String(50), unique=True, nullable=False)
 
-    address = db.Column(db.String(250), nullable=False)
+    id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
+    email = db.Column(db.String(100), unique=True, nullable=False)
     phone = db.Column(db.String(50), nullable=False)
+    address = db.Column(db.String(250), nullable=False)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
 
     orders = db.relationship('Order', backref='customer')
@@ -128,8 +122,9 @@ class Customer(db.Model):
         return {
             'id': self.id,
             'name': self.name,
-            'address': self.address,
+            'email': self.email,
             'phone': self.phone,
+            'address': self.address,
             'orders': [o.serialize() for o in self.orders],
         }
 
@@ -139,6 +134,7 @@ class Category(db.Model):
 
     __tablename__ = 'categories'
 
+    id = db.Column(db.Integer, primary_key=True)
     items = db.relationship(
         'Item', backref='category', cascade='all, delete-orphan', lazy=False
     )
@@ -175,8 +171,9 @@ class Item(db.Model):
 
     __tablename__ = 'items'
 
-    description = db.Column(db.String(250))
+    id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
+    description = db.Column(db.String(250), default='')
     price = db.Column(db.Numeric(5, 2), nullable=False)
 
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
@@ -200,6 +197,7 @@ class Item(db.Model):
 class Ingredient(db.Model):
     __tablename__ = 'ingredients'
 
+    id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(20), unique=True, nullable=False)
 
     def serialize(self):
@@ -209,17 +207,18 @@ class Ingredient(db.Model):
 class Order(db.Model):
     __tablename__ = 'orders'
 
+    id = db.Column(db.Integer, primary_key=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False)
+    restaurant_id = db.Column(
+        db.Integer, db.ForeignKey('restaurants.id'), nullable=False
+    )
+
     items = db.relationship(
         'Item',
         secondary=orders_items,
         lazy='subquery',
         backref=db.backref('orders', lazy=True),
     )
-    restaurant_id = db.Column(
-        db.Integer, db.ForeignKey('restaurants.id'), nullable=False
-    )
-    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False)
-    is_completed = db.Column(db.Boolean, nullable=False)
 
     def serialize(self):
         return {
@@ -227,11 +226,4 @@ class Order(db.Model):
             'customer_id': self.customer_id,
             'restaurant_id': self.restaurant_id,
             'items': [item.serialize() for item in self.items],
-            'is_completed': self.is_completed,
         }
-
-
-# Importing create_app after assigning db avoids circular import issue
-from . import create_app
-
-app = create_app()

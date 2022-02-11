@@ -10,6 +10,15 @@ api = Blueprint('api', __name__)
 from .config import Config
 from .models import Category, Customer, Ingredient, Item, Order, Restaurant
 
+### HELPERS ###
+
+
+def prepare_request_data(Model):
+    assert request.method in {'POST', 'PUT', 'PATCH'}
+    if request.method in {'POST', 'PUT'}:
+        return {**Model.defaults(), **request.get_json()}
+    return request.get_json()
+
 
 @api.route('/')
 def root():
@@ -54,39 +63,26 @@ def create_restaurant(payload: dict):
     restaurant = Restaurant.query.filter_by(auth0_id=payload['sub']).first()
     if restaurant is not None:
         return get_restaurant(restaurant.id), 302
-    # Get request body and attach auth0 id from payload
-    body = request.get_json()
-    body['auth0_id'] = payload['sub']
-    # Make sure request body contains data for non-nullable columns in the DB
-    for field in Restaurant.required_fields(method='POST'):
-        field_data = body.get(field, None)
-        if field_data in {'', None}:
-            abort(400)
-    # Create empty resource, add data from request body and save to DB
+    # Create empty resource, add data and save to DB
     new_restaurant = Restaurant()
-    new_restaurant.update(body)
-    new_restaurant.save()
+    data = prepare_request_data(Restaurant)
+    new_restaurant.update(data)
+    new_restaurant.auth0_id = payload['sub']
 
-    return {'id': new_restaurant.id}, 201
+    return {'id': new_restaurant.save()}, 201
 
 
-@api.route('/restaurants/<int:id>', methods=['PATCH'])
+@api.route('/restaurants/<int:id>', methods=['PUT', 'PATCH'])
 @requires_auth('update:restaurant')
 def update_restaurant(payload: dict, id: int):
     restaurant = Restaurant.get_or_404(id)
     # Validate ownership of data
     if restaurant.auth0_id != payload['sub']:
         abort(403)
-    body = request.get_json()
-    # Prevent undesired modification to child objects of restaurant
-    # by removing any references to these from the request body
-    for key in {'categories', 'orders'}:
-        try:
-            del body[key]
-        except KeyError:
-            continue
-    restaurant.update(body)
+    data = prepare_request_data(Restaurant)
+    restaurant.update(data)
     restaurant.save()
+
     return Response(status=200)
 
 
@@ -95,6 +91,8 @@ def update_restaurant(payload: dict, id: int):
 def delete_restaurant(id: int):
     '''Admin delete a restaurant record that has been deactivated by its owner.'''
     restaurant = Restaurant.query.get_or_404(id)
+    if restaurant.is_active:
+        abort(409)
     restaurant.delete()
     return Response(status=200)
 
@@ -130,21 +128,14 @@ def create_customer(payload: dict):
     # If requester's auth0 id already exists, return the associated resource instead
     customer = Customer.query.filter_by(auth0_id=payload['sub']).first()
     if customer is not None:
-        return get_customer(payload, customer.id), 302
-    # Get request body and attach auth0 id from payload
-    body = request.get_json()
-    body['auth0_id'] = payload['sub']
-    # Make sure request body contains data for non-nullable columns in the DB
-    for field in Customer.required_fields(method='POST'):
-        field_data = body.get(field, None)
-        if field_data in {'', None}:
-            abort(400)
-    # Create empty resource, add data from request body and save to DB
+        return customer.serialize(), 302
+    # Create empty resource, add data and save to DB
     new_customer = Customer()
-    new_customer.update(body)
-    new_customer.save()
+    data = prepare_request_data(Customer)
+    new_customer.update(data)
+    new_customer.auth0_id = payload['sub']
 
-    return {'id': new_customer.id}, 201
+    return {'id': new_customer.save()}, 201
 
 
 @api.route('/customers/<int:id>', methods=['PATCH'])
@@ -154,14 +145,8 @@ def update_customer(payload: dict, id: int):
     # Validate ownership of data
     if customer.auth0_id != payload['sub']:
         abort(403)
-    body = request.get_json()
-    # Prevent undesired modification to child objects of customer
-    # by removing any references to these from the request body
-    try:
-        del body['orders']
-    except KeyError:
-        pass
-    customer.update(body)
+    data = prepare_request_data(Customer)
+    customer.update(data)
     customer.save()
     return Response(status=200)
 
@@ -191,14 +176,12 @@ def create_category(payload: dict, id: int):
     restaurant = Restaurant.get_or_404(id)
     if restaurant.auth0_id != payload['sub']:
         abort(403)
-    body = request.get_json()
-    if not body.get('name', ''):
-        abort(400)
     new_category = Category()
+    data = prepare_request_data(Restaurant)
     new_category.restaurant_id = restaurant.id
-    new_category.name = body['name']
-    new_category.save()
-    return {'id': new_category.id}, 201
+    new_category.name = data['name']
+
+    return {'id': new_category.save()}, 201
 
 
 @api.route('/restaurants/<int:id>/categories', methods=['PUT', 'PATCH'])
@@ -209,20 +192,8 @@ def update_category(payload: dict, id: int):
     # Validate ownership of data
     if restaurant.auth0_id != payload['sub']:
         abort(403)
-    body = request.get_json()
-    # Prevent undesired modification to child objects of category
-    # by removing any references to these from the request body
-    try:
-        del body['items']
-    except KeyError:
-        pass
-    # -- PREFLIGHT PUT --
-    if request.method == 'PUT':
-        for field in Category.required_fields(method='PUT'):
-            if field not in body:
-                abort(400)
-    # -- PERFORM PUT / PATCH --
-    category.update(body)
+    data = prepare_request_data(Category)
+    category.update(data)
     category.save()
     return Response(status=200)
 
@@ -259,31 +230,24 @@ def create_item(payload: dict, id: int):
     # Validate ownership of data
     if restaurant.auth0_id != payload['sub']:
         abort(403)
-    body = request.get_json()
-    # Set item's parent ID
-    body['category_id'] = id
-    for field in Item.required_fields(method='POST'):
-        field_data = body.get(field, None)
-        if field_data in {'', None}:
-            abort(400)
+    # Create new empty item
     new_item = Item()
-    # First take care of converting any ingredient names to ingredient objects
-    if body.get('ingredients', []):
+    data = prepare_request_data(Item)
+    # Take care of any ingredients
+    if data.get('ingredients', []):
         # Remove original ingredients list from message body using .pop()
         # so it doesn't revert when calling .update() on new_item
         try:
             new_item.ingredients = [
                 get_or_create_ingredient(ingredient['name'])
-                for ingredient in body.pop('ingredients')
+                for ingredient in data.pop('ingredients')
             ]
-        except Exception as e:
-            api.logger.error(e)
+        except KeyError:
             abort(400)
-    # Add remaining data to transient Item record
-    new_item.update(body)
-    new_item.save()
+    # Add remaining data
+    new_item.update(data)
 
-    return {'id': new_item.id}, 201
+    return {'id': new_item.save()}, 201
 
 
 @api.route('/items/<int:id>', methods=['PATCH', 'PUT'])
@@ -294,28 +258,22 @@ def update_item(payload: dict, id: int):
     # Validate ownership of data
     if restaurant.auth0_id != payload['sub']:
         abort(403)
-    body = request.get_json()
+    # Get existing item
     item = Item.query.get_or_404(id)
-    # -- PREFLIGHT PUT --
-    if request.method == 'PUT':
-        for field in Item.required_fields(method='PUT'):
-            if field not in body:
-                abort(400)
-    # -- PERFORM PUT / PATCH --
+    data = prepare_request_data(Item)
     # Take care of the item.ingredients list first
-    if body.get('ingredients', []):
+    if data.get('ingredients', []):
         try:
             # Remove original ingredients list from message body using .pop() so it won't
             # override the fetched Ingredient records when calling .update() on new_item
             item.ingredients = [
                 get_or_create_ingredient(ingredient['name'])
-                for ingredient in body.pop('ingredients')
+                for ingredient in data.pop('ingredients')
             ]
-        except Exception as e:
-            api.logger.error(e)
+        except KeyError:
             abort(400)
     # Replace remaining data on the item being updated
-    item.update(body)
+    item.update(data)
     item.save()
     return Response(status=200)
 
@@ -404,8 +362,8 @@ def submit_order(payload: dict, id: int):
     new_order.restaurant_id = Category.query.get_or_404(
         new_order.items[0].category_id
     ).restaurant_id
-    new_order.save()
-    return {'id': new_order.id}, 201
+
+    return {'id': new_order.save()}, 201
 
 
 @api.route('/customers/<int:id>/orders')
