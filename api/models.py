@@ -48,11 +48,12 @@ class CRUDModel(Model):
     def defaults(cls):
         '''Return a dict of of <column name>:<default value> pairs for the given Model.
         If no default value is specified, the value will be None instead.'''
+
         mapper = inspect(cls)
 
-        def _get_column_default_value(col):
+        def _get_column_default_value(column):
             try:
-                return col.default.arg
+                return column.default.arg
             except AttributeError:
                 return None
 

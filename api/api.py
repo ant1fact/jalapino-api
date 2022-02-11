@@ -10,14 +10,40 @@ api = Blueprint('api', __name__)
 from .config import Config
 from .models import Category, Customer, Ingredient, Item, Order, Restaurant
 
-### HELPERS ###
+
+def prepare_request_data(Model, method=request.method):
+    '''Central logic for preparing data coming from POST, PUT and PATCH requests.'''
+    if method not in {'POST', 'PUT', 'PATCH'}:
+        abort(405)
+    if method == 'POST':
+        # Requires: All data
+        # Server fills in missing data with defaults, except where column.nullable=False
+        # in which case the data must come from the client.
+        # Raise 400 (Bad Request) if any data in the final representation is None.
+        data = {**Model.defaults(), **request.get_json()}
+        if None in data.values():
+            abort(400)
+        return data
+    if method == 'PUT':
+        # Requires: All data
+        # All data must be provided by the client.
+        # Raise 400 (Bad Request) if any data in the final representation is None.
+        data = request.get_json()
+        for k in Model.defaults():
+            if k not in data or not data[k]:
+                abort(400)
+        return data
+    if method == 'PATCH':
+        # Requires: Some data
+        # Raise 400 (Bad Request) if the final representation contains no data.
+        # i.e. none of the incoming key:value pairs were valid and got filtered out
+        data = {k: v for k, v in request.get_json().items() if k in Model.defaults()}
+        if not data:
+            abort(400)
+        return data
 
 
-def prepare_request_data(Model):
-    assert request.method in {'POST', 'PUT', 'PATCH'}
-    if request.method in {'POST', 'PUT'}:
-        return {**Model.defaults(), **request.get_json()}
-    return request.get_json()
+### API INFO ###
 
 
 @api.route('/')
