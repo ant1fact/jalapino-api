@@ -19,11 +19,6 @@ def create_app(config=config.Config):
 
     app.register_blueprint(api)
 
-    
-    @app.before_first_request
-    def before_first_request():
-        session['basket'] = []
-
     @app.after_request
     def after_request(response):
         response.headers.add(

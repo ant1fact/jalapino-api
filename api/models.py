@@ -61,6 +61,7 @@ class CRUDModel(Model):
             col.name: _get_column_default_value(col)
             for col in mapper.columns
             if col.name not in PROTECTED_COLUMN_NAMES
+            and not col.foreign_keys
         }
 
 
@@ -224,7 +225,7 @@ class Order(db.Model):
     def serialize(self):
         return {
             'id': self.id,
-            'customer_id': self.customer_id,
-            'restaurant_id': self.restaurant_id,
+            'customer': Customer.query.get_or_404(self.customer_id).serialize(),
+            'restaurant': Restaurant.query.get_or_404(self.restaurant_id).serialize(),
             'items': [item.serialize() for item in self.items],
         }

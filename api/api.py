@@ -1,4 +1,5 @@
 import json
+import re
 
 from flask import Blueprint, Response, abort, jsonify, request, session
 from werkzeug.exceptions import HTTPException
@@ -11,11 +12,22 @@ from .config import Config
 from .models import Category, Customer, Ingredient, Item, Order, Restaurant
 
 
-def prepare_request_data(Model, method=request.method):
+def _verify_ownership(Model, id: int, auth0_id: str):
+    '''Verify ownership of, and return the resource being requested.'''
+    resource = Model.query.get_or_404(id)
+    if 'auth0_id' not in Model.__dict__:
+        # No ownership detected, return resource
+        return resource
+    if resource.auth0_id != auth0_id:
+        abort(403)
+    return resource
+
+
+def _prepare_request_data(Model):
     '''Central logic for preparing data coming from POST, PUT and PATCH requests.'''
-    if method not in {'POST', 'PUT', 'PATCH'}:
+    if request.method not in {'POST', 'PUT', 'PATCH'}:
         abort(405)
-    if method == 'POST':
+    if request.method == 'POST':
         # Requires: All data
         # Server fills in missing data with defaults, except where column.nullable=False
         # in which case the data must come from the client.
@@ -24,7 +36,7 @@ def prepare_request_data(Model, method=request.method):
         if None in data.values():
             abort(400)
         return data
-    if method == 'PUT':
+    if request.method == 'PUT':
         # Requires: All data
         # All data must be provided by the client.
         # Raise 400 (Bad Request) if any data in the final representation is None.
@@ -33,7 +45,7 @@ def prepare_request_data(Model, method=request.method):
             if k not in data or not data[k]:
                 abort(400)
         return data
-    if method == 'PATCH':
+    if request.method == 'PATCH':
         # Requires: Some data
         # Raise 400 (Bad Request) if the final representation contains no data.
         # i.e. none of the incoming key:value pairs were valid and got filtered out
@@ -91,7 +103,7 @@ def create_restaurant(payload: dict):
         return get_restaurant(restaurant.id), 302
     # Create empty resource, add data and save to DB
     new_restaurant = Restaurant()
-    data = prepare_request_data(Restaurant)
+    data = _prepare_request_data(Restaurant)
     new_restaurant.update(data)
     new_restaurant.auth0_id = payload['sub']
 
@@ -101,11 +113,8 @@ def create_restaurant(payload: dict):
 @api.route('/restaurants/<int:id>', methods=['PUT', 'PATCH'])
 @requires_auth('update:restaurant')
 def update_restaurant(payload: dict, id: int):
-    restaurant = Restaurant.get_or_404(id)
-    # Validate ownership of data
-    if restaurant.auth0_id != payload['sub']:
-        abort(403)
-    data = prepare_request_data(Restaurant)
+    restaurant = _verify_ownership(Restaurant, id, auth0_id=payload['sub'])
+    data = _prepare_request_data(Restaurant)
     restaurant.update(data)
     restaurant.save()
 
@@ -141,10 +150,8 @@ def get_customers():
 @api.route('/customers/<int:id>')
 @requires_auth('read:customer')
 def get_customer(payload: dict, id: int):
-    customer = Customer.query.get_or_404(id)
-    if customer.auth0_id != payload['sub']:
-        abort(403)
-    return Customer.query.get_or_404(id).serialize()
+    customer = _verify_ownership(Customer, id, auth0_id=payload['sub'])
+    return customer.serialize()
 
 
 @api.route('/customers', methods=['POST'])
@@ -157,7 +164,7 @@ def create_customer(payload: dict):
         return customer.serialize(), 302
     # Create empty resource, add data and save to DB
     new_customer = Customer()
-    data = prepare_request_data(Customer)
+    data = _prepare_request_data(Customer)
     new_customer.update(data)
     new_customer.auth0_id = payload['sub']
 
@@ -167,11 +174,8 @@ def create_customer(payload: dict):
 @api.route('/customers/<int:id>', methods=['PATCH'])
 @requires_auth('update:customer')
 def update_customer(payload: dict, id: int):
-    customer = Customer.get_or_404(id)
-    # Validate ownership of data
-    if customer.auth0_id != payload['sub']:
-        abort(403)
-    data = prepare_request_data(Customer)
+    customer = _verify_ownership(Customer, id, auth0_id=payload['sub'])
+    data = _prepare_request_data(Customer)
     customer.update(data)
     customer.save()
     return Response(status=200)
@@ -182,6 +186,8 @@ def update_customer(payload: dict, id: int):
 def delete_customer(id: int):
     '''Admin delete a customer record that has been deactivated by its owner.'''
     customer = Customer.query.get_or_404(id)
+    if customer.is_active:
+        abort(409)
     customer.delete()
     return Response(status=200)
 
@@ -199,28 +205,33 @@ def get_restaurant_categories(id: int):
 @requires_auth('create:category')
 def create_category(payload: dict, id: int):
     '''Create new category under the parent restaurant resource.'''
-    restaurant = Restaurant.get_or_404(id)
-    if restaurant.auth0_id != payload['sub']:
-        abort(403)
+    restaurant = _verify_ownership(Restaurant, id, auth0_id=payload['sub'])
     new_category = Category()
-    data = prepare_request_data(Restaurant)
+    data = _prepare_request_data(Restaurant)
+    new_category.update(data)
     new_category.restaurant_id = restaurant.id
-    new_category.name = data['name']
 
     return {'id': new_category.save()}, 201
 
 
-@api.route('/restaurants/<int:id>/categories', methods=['PUT', 'PATCH'])
+@api.route('/categories/<int:id>', methods=['PUT', 'PATCH'])
 @requires_auth('update:category')
 def update_category(payload: dict, id: int):
     category = Category.query.get_or_404(id)
-    restaurant = Restaurant.query.get_or_404(category.restaurant_id)
-    # Validate ownership of data
-    if restaurant.auth0_id != payload['sub']:
-        abort(403)
-    data = prepare_request_data(Category)
+    _verify_ownership(Restaurant, id=category.restaurant_id, auth0_id=payload['sub'])
+    data = _prepare_request_data(Category)
     category.update(data)
     category.save()
+    return Response(status=200)
+
+
+@api.route('/categories/<int:id>', methods=['DELETE'])
+@requires_auth('delete:category')
+def delete_category(payload: dict, id: int):
+    category = Category.query.get_or_404(id)
+    _verify_ownership(Restaurant, id=category.restaurant_id, auth0_id=payload['sub'])
+    category.items = []
+    category.delete()
     return Response(status=200)
 
 
@@ -237,7 +248,12 @@ def get_items():
     return jsonify([i.serialize() for i in items])
 
 
-def get_or_create_ingredient(ingredient_name: str) -> Ingredient:
+@api.route('/items/<int:id>')
+def get_item(id: int):
+    return Item.query.get_or_404(id).serialize()
+
+
+def _get_or_create_ingredient(ingredient_name: str) -> Ingredient:
     '''Helper function for create_item endpoint.'''
     ingredient = Ingredient.query.filter_by(name=ingredient_name).first()
     if ingredient is not None:
@@ -247,29 +263,31 @@ def get_or_create_ingredient(ingredient_name: str) -> Ingredient:
     return new_ingredient
 
 
+def _process_ingredients(item: Item, ingredients: list) -> list:
+    '''Turn a list of ingredient dicts {'name': '...'} into Ingredient objects.'''
+    try:
+        item.ingredients = [
+            _get_or_create_ingredient(ingredient['name'])
+            for ingredient in ingredients
+            # Make sure we don't process any empty strings or None values
+            if ingredient['name']
+        ]
+        return item
+    except KeyError:
+        abort(400)
+
+
 @api.route('/categories/<int:id>/items', methods=['POST'])
 @requires_auth('create:item')
 def create_item(payload: dict, id: int):
     '''Create a new item and its ingredients.'''
     category = Category.query.get_or_404(id)
-    restaurant = Restaurant.query.get_or_404(category.restaurant_id)
-    # Validate ownership of data
-    if restaurant.auth0_id != payload['sub']:
-        abort(403)
+    _verify_ownership(Restaurant, id=category.restaurant_id, auth0_id=payload['sub'])
     # Create new empty item
     new_item = Item()
-    data = prepare_request_data(Item)
-    # Take care of any ingredients
-    if data.get('ingredients', []):
-        # Remove original ingredients list from message body using .pop()
-        # so it doesn't revert when calling .update() on new_item
-        try:
-            new_item.ingredients = [
-                get_or_create_ingredient(ingredient['name'])
-                for ingredient in data.pop('ingredients')
-            ]
-        except KeyError:
-            abort(400)
+    if request.get_json().get('ingredients', []):
+        new_item = _process_ingredients(new_item, request.json['ingredients'])
+    data = _prepare_request_data(Item)
     # Add remaining data
     new_item.update(data)
 
@@ -280,25 +298,12 @@ def create_item(payload: dict, id: int):
 @requires_auth('update:item')
 def update_item(payload: dict, id: int):
     category = Category.query.get_or_404(id)
-    restaurant = Restaurant.query.get_or_404(category.restaurant_id)
-    # Validate ownership of data
-    if restaurant.auth0_id != payload['sub']:
-        abort(403)
+    _verify_ownership(Restaurant, id=category.restaurant_id, auth0_id=payload['sub'])
     # Get existing item
     item = Item.query.get_or_404(id)
-    data = prepare_request_data(Item)
-    # Take care of the item.ingredients list first
-    if data.get('ingredients', []):
-        try:
-            # Remove original ingredients list from message body using .pop() so it won't
-            # override the fetched Ingredient records when calling .update() on new_item
-            item.ingredients = [
-                get_or_create_ingredient(ingredient['name'])
-                for ingredient in data.pop('ingredients')
-            ]
-        except KeyError:
-            abort(400)
-    # Replace remaining data on the item being updated
+    if request.get_json().get('ingredients', []):
+        item = _process_ingredients(item, request.json['ingredients'])
+    data = _prepare_request_data(Item)
     item.update(data)
     item.save()
     return Response(status=200)
@@ -309,10 +314,9 @@ def update_item(payload: dict, id: int):
 def delete_item(payload: dict, id: int):
     item = Item.query.get_or_404(id)
     category = Category.query.get_or_404(item.category_id)
-    restaurant = Restaurant.query.get_or_404(category.restaurant_id)
-    # Validate ownership of data
-    if restaurant.auth0_id != payload['sub']:
-        abort(403)
+    _verify_ownership(Restaurant, id=category.restaurant_id, auth0_id=payload['sub'])
+    # Remove children before deletion
+    item.ingredients = []
     item.delete()
     return Response(status=200)
 
@@ -351,43 +355,56 @@ def get_orders():
     return jsonify([o.serialize() for o in Order.query.all()])
 
 
+def _initialize_basket():
+    if 'basket' not in session:
+        session['basket'] = {'restaurant_id': int, 'customer_id': int, 'item_ids': []}
+
+
 @api.route('/customers/<int:id>/basket', methods=['POST'])
 @requires_auth('create:order')
 def add_item_to_basket(payload: dict, id: int):
-    customer = Customer.query.get_or_404(id)
-    if customer.auth0_id != payload['sub']:
-        abort(403)
-    item_id = request.args.get('item_id', None)
-    if item_id is None:
+    '''Add a new item to the session basket.
+    Expects ?restaurant_id=<id>&item_id=<id> in the query parameters.'''
+    if 'restaurant_id' not in request.args or 'item_id' not in request.args:
         abort(400)
-    session['basket'].append(item_id)
+    customer = _verify_ownership(Customer, id, auth0_id=payload['sub'])
+    _initialize_basket()
+    basket = session['basket']
+    if not basket['customer_id']:
+        basket['customer_id'] = customer.id
+    elif basket['customer_id'] != customer.id:
+        abort(403)
+    if not basket['restaurant_id']:
+        basket['restaurant_id'] = request.args['restaurant_id']
+    elif basket['restaurant_id'] != request.args['restaurant_id']:
+        abort(409)
+    basket['item_ids'].append(request.args['item_id'])
+    session.modified = True
     return Response(status=200)
 
 
 @api.route('/customers/<int:id>/basket')
 @requires_auth('read:order')
 def get_items_from_basket(payload: dict, id: int):
-    customer = Customer.query.get_or_404(id)
-    if customer.auth0_id != payload['sub']:
-        abort(403)
-    return jsonify([Item.query.get_or_404(id).serialize() for id in session['basket']])
+    _verify_ownership(Customer, id, auth0_id=payload['sub'])
+    _initialize_basket()
+    return jsonify(
+        [Item.query.get_or_404(id).serialize() for id in session['basket']['item_ids']]
+    )
 
 
 @api.route('/customers/<int:id>/orders', methods=['POST'])
 @requires_auth('create:order')
 def submit_order(payload: dict, id: int):
-    customer = Customer.query.get_or_404(id)
-    if customer.auth0_id != payload['sub']:
-        abort(403)
+    customer = _verify_ownership(Customer, id, auth0_id=payload['sub'])
     # Check if basket is empty
-    if not session['basket']:
+    basket = session['basket']
+    if not basket['item_ids']:
         abort(422)
     new_order = Order()
-    new_order.items = [Item.query.get_or_404(item_id) for item_id in session['basket']]
-    new_order.customer_id = customer.id
-    new_order.restaurant_id = Category.query.get_or_404(
-        new_order.items[0].category_id
-    ).restaurant_id
+    new_order.customer_id = basket['customer_id']
+    new_order.restaurant_id = basket['restaurant_id']
+    new_order.items = [Item.query.get_or_404(item_id) for item_id in basket['item_ids']]
 
     return {'id': new_order.save()}, 201
 
@@ -396,9 +413,7 @@ def submit_order(payload: dict, id: int):
 @requires_auth('read:order')
 def get_customer_orders(payload: dict, id: int):
     '''Get a customer's order history.'''
-    customer = Customer.query.get_or_404(id)
-    if customer.auth0_id != payload['sub']:
-        abort(403)
+    customer = _verify_ownership(Customer, id, auth0_id=payload['sub'])
     return jsonify([o.serialize() for o in customer.orders])
 
 
@@ -406,9 +421,7 @@ def get_customer_orders(payload: dict, id: int):
 @requires_auth('read:order')
 def get_restaurant_orders(payload: dict, id: int):
     '''Get a restaurant's order history.'''
-    restaurant = Restaurant.query.get_or_404(id)
-    if restaurant.auth0_id != payload['sub']:
-        abort(403)
+    restaurant = _verify_ownership(Restaurant, id, auth0_id=payload['sub'])
     return jsonify([o.serialize() for o in restaurant.orders])
 
 
