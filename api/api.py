@@ -1,15 +1,22 @@
 import json
-import re
 
-from flask import Blueprint, Response, abort, jsonify, request, session
+from flask import (
+    Blueprint,
+    Response,
+    abort,
+    jsonify,
+    redirect,
+    request,
+    url_for,
+)
 from werkzeug.exceptions import HTTPException
 
-from .auth import AuthError, requires_auth
+from .auth import AUTH0_DOMAIN, AuthError, requires_auth
 
 api = Blueprint('api', __name__)
 
 from .config import Config
-from .models import Category, Customer, Ingredient, Item, Order, Restaurant
+from .models import db, Category, Customer, Ingredient, Item, Order, Restaurant
 
 
 def _verify_ownership(Model, id: int, auth0_id: str):
@@ -55,11 +62,11 @@ def _prepare_request_data(Model):
         return data
 
 
-### API INFO ###
+### INFO ###
 
 
-@api.route('/')
-def root():
+@api.route('/info')
+def info():
     return {
         'title': 'Jalapino - Final project for Udacity Fullstack Nanodegree',
         'version': 0.1,
@@ -72,17 +79,28 @@ def root():
         'license': {'name': 'MIT', 'url': 'https://spdx.org/licenses/MIT.html'},
     }
 
+### AUTH REDIRECTS ###
+
+
+@api.route('/login')
+def redirect_login():
+    return redirect(f'https://{AUTH0_DOMAIN}/authorize', code=302)
+
+@api.route('/callback')
+@api.route('/logout')
+def redirect_other():
+    return redirect(url_for('root'), code=302)
+
 
 ### RESTAURANTS ###
 
 
 @api.route('/restaurants')
 def get_restaurants():
-    '''Return a list of all restaurants with active status paginated.'''
+    '''Return a list of all restaurants paginated.'''
     page = request.args.get('page', 1, type=int)
     restaurants = (
-        Restaurant.query.filter_by(is_active=True)
-        .paginate(page=page, per_page=Config.PAGINATE_RESULTS_PER_PAGE)
+        Restaurant.query.paginate(page=page, per_page=Config.PAGINATE_RESULTS_PER_PAGE)
         .items
     )
     return jsonify([r.serialize() for r in restaurants])
@@ -96,12 +114,6 @@ def get_restaurant(id: int):
 @api.route('/restaurants', methods=['POST'])
 @requires_auth('create:restaurant')
 def create_restaurant(payload: dict):
-    '''Create a restaurant resource once per auth0 restaurant registration.'''
-    # If requester's auth0 id already exists, return the associated resource instead
-    restaurant = Restaurant.query.filter_by(auth0_id=payload['sub']).first()
-    if restaurant is not None:
-        return get_restaurant(restaurant.id), 302
-    # Create empty resource, add data and save to DB
     new_restaurant = Restaurant()
     data = _prepare_request_data(Restaurant)
     new_restaurant.update(data)
@@ -122,29 +134,14 @@ def update_restaurant(payload: dict, id: int):
 
 
 @api.route('/restaurants/<int:id>', methods=['DELETE'])
-@requires_auth('admin')
-def delete_restaurant(id: int):
-    '''Admin delete a restaurant record that has been deactivated by its owner.'''
-    restaurant = Restaurant.query.get_or_404(id)
-    if restaurant.is_active:
-        abort(409)
+@requires_auth('delete:restaurant')
+def delete_restaurant(payload: dict, id: int):
+    restaurant = _verify_ownership(Restaurant, id, auth0_id=payload['sub'])
     restaurant.delete()
     return Response(status=200)
 
 
 ### CUSTOMERS ###
-
-
-@api.route('/customers')
-@requires_auth('admin')
-def get_customers():
-    '''Return a list of all customers paginated.
-    NOTE: For data protection, this endpoint is only available to admins.'''
-    page = request.args.get('page', 1, type=int)
-    customers = Customer.query.paginate(
-        page=page, per_page=Config.PAGINATE_RESULTS_PER_PAGE
-    ).items
-    return jsonify([c.serialize() for c in customers])
 
 
 @api.route('/customers/<int:id>')
@@ -157,12 +154,6 @@ def get_customer(payload: dict, id: int):
 @api.route('/customers', methods=['POST'])
 @requires_auth('create:customer')
 def create_customer(payload: dict):
-    '''Create a customer resource once per auth0 customer registration.'''
-    # If requester's auth0 id already exists, return the associated resource instead
-    customer = Customer.query.filter_by(auth0_id=payload['sub']).first()
-    if customer is not None:
-        return customer.serialize(), 302
-    # Create empty resource, add data and save to DB
     new_customer = Customer()
     data = _prepare_request_data(Customer)
     new_customer.update(data)
@@ -182,12 +173,9 @@ def update_customer(payload: dict, id: int):
 
 
 @api.route('/customers/<int:id>', methods=['DELETE'])
-@requires_auth('admin')
-def delete_customer(id: int):
-    '''Admin delete a customer record that has been deactivated by its owner.'''
-    customer = Customer.query.get_or_404(id)
-    if customer.is_active:
-        abort(409)
+@requires_auth('delete:customer')
+def delete_customer(payload: dict, id: int):
+    customer = _verify_ownership(Customer, id, auth0_id=payload['sub'])
     customer.delete()
     return Response(status=200)
 
@@ -195,16 +183,9 @@ def delete_customer(id: int):
 ### CATEGORIES ###
 
 
-@api.route('/restaurants/<int:id>/categories')
-def get_restaurant_categories(id: int):
-    '''Get all categories specific to a restaurant.'''
-    return jsonify([c.serialize() for c in Restaurant.query.get_or_404(id).categories])
-
-
 @api.route('/restaurants/<int:id>/categories', methods=['POST'])
 @requires_auth('create:category')
 def create_category(payload: dict, id: int):
-    '''Create new category under the parent restaurant resource.'''
     restaurant = _verify_ownership(Restaurant, id, auth0_id=payload['sub'])
     new_category = Category()
     data = _prepare_request_data(Restaurant)
@@ -230,6 +211,7 @@ def update_category(payload: dict, id: int):
 def delete_category(payload: dict, id: int):
     category = Category.query.get_or_404(id)
     _verify_ownership(Restaurant, id=category.restaurant_id, auth0_id=payload['sub'])
+    # Remove children before deletion
     category.items = []
     category.delete()
     return Response(status=200)
@@ -238,23 +220,7 @@ def delete_category(payload: dict, id: int):
 ### ITEMS AND INGREDIENTS ###
 
 
-@api.route('/items')
-def get_items():
-    '''Return a list of all items paginated.'''
-    page = request.args.get('page', 1, type=int)
-    items = Item.query.paginate(
-        page=page, per_page=Config.PAGINATE_RESULTS_PER_PAGE
-    ).items
-    return jsonify([i.serialize() for i in items])
-
-
-@api.route('/items/<int:id>')
-def get_item(id: int):
-    return Item.query.get_or_404(id).serialize()
-
-
 def _get_or_create_ingredient(ingredient_name: str) -> Ingredient:
-    '''Helper function for create_item endpoint.'''
     ingredient = Ingredient.query.filter_by(name=ingredient_name).first()
     if ingredient is not None:
         return ingredient
@@ -263,18 +229,20 @@ def _get_or_create_ingredient(ingredient_name: str) -> Ingredient:
     return new_ingredient
 
 
-def _process_ingredients(item: Item, ingredients: list) -> list:
-    '''Turn a list of ingredient dicts {'name': '...'} into Ingredient objects.'''
-    try:
-        item.ingredients = [
-            _get_or_create_ingredient(ingredient['name'])
-            for ingredient in ingredients
-            # Make sure we don't process any empty strings or None values
-            if ingredient['name']
-        ]
-        return item
-    except KeyError:
-        abort(400)
+def _process_ingredient_names(item: Item, ingredient_names: list) -> list:
+    '''Turn a list of ingredient names into Ingredient objects.'''
+    item.ingredients = [
+        _get_or_create_ingredient(ingredient_name)
+        for ingredient_name in ingredient_names
+        # Make sure we don't process any empty strings or None values
+        if ingredient_name
+    ]
+    return item
+
+
+@api.route('/items/<int:id>')
+def get_item(id: int):
+    return Item.query.get_or_404(id).serialize()
 
 
 @api.route('/categories/<int:id>/items', methods=['POST'])
@@ -285,10 +253,11 @@ def create_item(payload: dict, id: int):
     _verify_ownership(Restaurant, id=category.restaurant_id, auth0_id=payload['sub'])
     # Create new empty item
     new_item = Item()
+    # Process ingredients
     if request.get_json().get('ingredients', []):
-        new_item = _process_ingredients(new_item, request.json['ingredients'])
-    data = _prepare_request_data(Item)
+        new_item = _process_ingredient_names(new_item, request.json['ingredients'])
     # Add remaining data
+    data = _prepare_request_data(Item)
     new_item.update(data)
 
     return {'id': new_item.save()}, 201
@@ -301,8 +270,10 @@ def update_item(payload: dict, id: int):
     _verify_ownership(Restaurant, id=category.restaurant_id, auth0_id=payload['sub'])
     # Get existing item
     item = Item.query.get_or_404(id)
+    # Process ingredients
     if request.get_json().get('ingredients', []):
-        item = _process_ingredients(item, request.json['ingredients'])
+        item = _process_ingredient_names(item, request.json['ingredients'])
+    # Add remaining data
     data = _prepare_request_data(Item)
     item.update(data)
     item.save()
@@ -321,24 +292,6 @@ def delete_item(payload: dict, id: int):
     return Response(status=200)
 
 
-@api.route('/ingredients')
-def get_ingredients():
-    return jsonify([i.serialize() for i in Ingredient.query.all()])
-
-
-@api.route('/ingredients/<int:id>')
-def get_ingredient(id: int):
-    return Ingredient.query.get_or_404(id).serialize()
-
-
-@api.route('/ingredients/<int:id>', methods=['DELETE'])
-@requires_auth('admin')
-def delete_ingredient(id: int):
-    ingredient = Ingredient.query.get_or_404(id)
-    ingredient.delete()
-    return Response(status=200)
-
-
 @api.route('/ingredients/<int:id>/items')
 def get_items_by_ingredient(id: int):
     ingredient = Ingredient.query.get_or_404(id)
@@ -347,72 +300,47 @@ def get_items_by_ingredient(id: int):
 
 ### ORDERS ###
 
+def _assert_same_restaurant(items: list) -> bool:
+    '''Check if all Item objects in the list are coming from the same restaurant.'''
+    # Return false if the list is empty, or if the contained items are not of type Item
+    if not items or not all(isinstance(item, Item) for item in items):
+        return False
+    # Take first item's restaurant_id and compare the rest to that
+    restaurant_id = items.pop(0).restaurant_id
+    if any(item.restaurant_id != restaurant_id for item in items):
+        return False
+    return True
 
-@api.route('/orders')
-@requires_auth('admin')
-def get_orders():
-    '''Get all past orders paginated.'''
-    return jsonify([o.serialize() for o in Order.query.all()])
-
-
-def _initialize_basket():
-    if 'basket' not in session:
-        session['basket'] = {'restaurant_id': int, 'customer_id': int, 'item_ids': []}
-
-
-@api.route('/customers/<int:id>/basket', methods=['POST'])
-@requires_auth('create:order')
-def add_item_to_basket(payload: dict, id: int):
-    '''Add a new item to the session basket.
-    Expects ?restaurant_id=<id>&item_id=<id> in the query parameters.'''
-    if 'restaurant_id' not in request.args or 'item_id' not in request.args:
+def _bulk_fetch_items(item_ids: list) -> list:
+    '''Convert a list of item ids to a list of Item objects.'''
+    if any(not isinstance(id, int) for id in item_ids):
         abort(400)
-    customer = _verify_ownership(Customer, id, auth0_id=payload['sub'])
-    _initialize_basket()
-    basket = session['basket']
-    if not basket['customer_id']:
-        basket['customer_id'] = customer.id
-    elif basket['customer_id'] != customer.id:
-        abort(403)
-    if not basket['restaurant_id']:
-        basket['restaurant_id'] = request.args['restaurant_id']
-    elif basket['restaurant_id'] != request.args['restaurant_id']:
-        abort(409)
-    basket['item_ids'].append(request.args['item_id'])
-    session.modified = True
-    return Response(status=200)
-
-
-@api.route('/customers/<int:id>/basket')
-@requires_auth('read:order')
-def get_items_from_basket(payload: dict, id: int):
-    _verify_ownership(Customer, id, auth0_id=payload['sub'])
-    _initialize_basket()
-    return jsonify(
-        [Item.query.get_or_404(id).serialize() for id in session['basket']['item_ids']]
-    )
+    items = [Item.query.get(id) for id in item_ids]
+    if not _assert_same_restaurant(items):
+        abort(400)
+    return items
 
 
 @api.route('/customers/<int:id>/orders', methods=['POST'])
 @requires_auth('create:order')
-def submit_order(payload: dict, id: int):
+def create_order(payload: dict, id: int):
+    '''Create new order, taking customer_id, restaurant_id and a list of items as item ids.'''
     customer = _verify_ownership(Customer, id, auth0_id=payload['sub'])
-    # Check if basket is empty
-    basket = session['basket']
-    if not basket['item_ids']:
-        abort(422)
+    data = _prepare_request_data(Order)
+    if data.customer_id != customer.id:
+        abort(403)
     new_order = Order()
-    new_order.customer_id = basket['customer_id']
-    new_order.restaurant_id = basket['restaurant_id']
-    new_order.items = [Item.query.get_or_404(item_id) for item_id in basket['item_ids']]
-
+    if not data.get('items', []):
+        abort(400)
+    new_order.items = _bulk_fetch_items(data.pop('items'))
+    new_order.update(data)
     return {'id': new_order.save()}, 201
 
 
 @api.route('/customers/<int:id>/orders')
 @requires_auth('read:order')
 def get_customer_orders(payload: dict, id: int):
-    '''Get a customer's order history.'''
+    '''Get the customer's order history.'''
     customer = _verify_ownership(Customer, id, auth0_id=payload['sub'])
     return jsonify([o.serialize() for o in customer.orders])
 
@@ -420,17 +348,9 @@ def get_customer_orders(payload: dict, id: int):
 @api.route('/restaurants/<int:id>/orders')
 @requires_auth('read:order')
 def get_restaurant_orders(payload: dict, id: int):
-    '''Get a restaurant's order history.'''
+    '''Get the restaurant's order history.'''
     restaurant = _verify_ownership(Restaurant, id, auth0_id=payload['sub'])
     return jsonify([o.serialize() for o in restaurant.orders])
-
-
-@api.route('/orders/<int:id>', methods=['DELETE'])
-@requires_auth('admin')
-def delete_order(id: int):
-    order = Order.query.get_or_404(id)
-    order.delete()
-    return Response(status=200)
 
 
 ### ERROR HANDLING ###

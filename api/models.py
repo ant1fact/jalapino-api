@@ -71,9 +71,7 @@ db = SQLAlchemy(model_class=CRUDModel)
 class Restaurant(db.Model):
     __tablename__ = 'restaurants'
 
-    # One restaurant per account (unique=True)
-    # ! unique=False for development only
-    auth0_id = db.Column(db.String(50), unique=False, nullable=False)
+    auth0_id = db.Column(db.String(50), nullable=False)
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), unique=True, nullable=False)
@@ -83,7 +81,6 @@ class Restaurant(db.Model):
     email = db.Column(db.String(100), unique=True, nullable=False)
     phone = db.Column(db.String(50), nullable=False)
     website = db.Column(db.String(250), default='')
-    is_active = db.Column(db.Boolean, default=True, nullable=False)
 
     categories = db.relationship(
         'Category', backref='restaurant', cascade='all, delete-orphan', lazy=False
@@ -108,15 +105,13 @@ class Restaurant(db.Model):
 class Customer(db.Model):
     __tablename__ = 'customers'
 
-    # One customer per account (unique=True)
-    auth0_id = db.Column(db.String(50), unique=True, nullable=False)
+    auth0_id = db.Column(db.String(50), nullable=False)
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     phone = db.Column(db.String(50), nullable=False)
     address = db.Column(db.String(250), nullable=False)
-    is_active = db.Column(db.Boolean, default=True, nullable=False)
 
     orders = db.relationship('Order', backref='customer')
 

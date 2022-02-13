@@ -75,7 +75,6 @@ CREATE TABLE public.customers (
     address character varying(250) NOT NULL,
     name character varying(50) NOT NULL,
     phone character varying(50) NOT NULL,
-    is_active boolean NOT NULL,
     id integer NOT NULL,
     email character varying(100) NOT NULL
 );
@@ -248,7 +247,6 @@ CREATE TABLE public.restaurants (
     email character varying(100) NOT NULL,
     phone character varying(50) NOT NULL,
     website character varying(250),
-    is_active boolean NOT NULL,
     id integer NOT NULL
 );
 
@@ -324,7 +322,7 @@ ALTER TABLE ONLY public.restaurants ALTER COLUMN id SET DEFAULT nextval('public.
 --
 
 COPY public.alembic_version (version_num) FROM stdin;
-98493dbbb085
+f7a1aa45ccc4
 \.
 
 
@@ -352,10 +350,10 @@ Drinks	3	12
 -- Data for Name: customers; Type: TABLE DATA; Schema: public; Owner: nullfame
 --
 
-COPY public.customers (auth0_id, address, name, phone, is_active, id, email) FROM stdin;
-auth0|test	99 Some St., Town, State	TEST	1-234-5678910	t	3	test@test.com
-auth0|test2	99 Some St., Town, State	TEST2	1-234-5678910	t	5	test2@test.com
-auth0|test3	99 Some St., Town, State	TEST3	1-234-5678910	t	6	test3@test.com
+COPY public.customers (auth0_id, address, name, phone, id, email) FROM stdin;
+auth0|test	99 Some St., Town, State	TEST	1-234-5678910	3	test@test.com
+auth0|test2	99 Some St., Town, State	TEST2	1-234-5678910	5	test2@test.com
+auth0|test3	99 Some St., Town, State	TEST3	1-234-5678910	6	test3@test.com
 \.
 
 
@@ -1098,10 +1096,10 @@ COPY public.orders_items (orders_id, item_id) FROM stdin;
 -- Data for Name: restaurants; Type: TABLE DATA; Schema: public; Owner: nullfame
 --
 
-COPY public.restaurants (auth0_id, name, logo_uri, description, address, email, phone, website, is_active, id) FROM stdin;
-auth0|61f848d190b60f0070f2f294	The Confused Chef	https://raw.githubusercontent.com/ant1fact/jalapino/main/static/images/food-ga4666f1ca_640.jpg	He used to have a hat, now he's a confused chef!	Schloßstraße 16, 01067 Dresden, Germany	info@confused-chef.com	+1 582-202-3209	www.confused-chef.com	t	2
-auth0|61f848d190b60f0070f2f294	U10 Seals	https://raw.githubusercontent.com/ant1fact/jalapino/main/static/images/shish-kebab-g4afb5ccab_640.jpg	Formerly known as Kee Chen Where	84 Palisade Ave, 06611 Trumbull, Connecticut	orders@u10seals.com	+1 203-275-0665	www.u10seals.com	t	3
-auth0|61f848d190b60f0070f2f294	Not Necessarily BBQ	https://raw.githubusercontent.com/ant1fact/jalapino/main/static/images/food-g9be06d40f_640.jpg	It's not all sunshine and BBQ!	8601 Lindbergh Blvd, 19153 Philadelphia, Pennsylvania	hello@nn-bbq.com	+1 202-918-2132	www.nn-bbq.com	t	1
+COPY public.restaurants (auth0_id, name, logo_uri, description, address, email, phone, website, id) FROM stdin;
+auth0|61f848d190b60f0070f2f294	The Confused Chef	https://raw.githubusercontent.com/ant1fact/jalapino/main/static/images/food-ga4666f1ca_640.jpg	He used to have a hat, now he's a confused chef!	Schloßstraße 16, 01067 Dresden, Germany	info@confused-chef.com	+1 582-202-3209	www.confused-chef.com	2
+auth0|61f848d190b60f0070f2f294	U10 Seals	https://raw.githubusercontent.com/ant1fact/jalapino/main/static/images/shish-kebab-g4afb5ccab_640.jpg	Formerly known as Kee Chen Where	84 Palisade Ave, 06611 Trumbull, Connecticut	orders@u10seals.com	+1 203-275-0665	www.u10seals.com	3
+auth0|61f848d190b60f0070f2f294	Not Necessarily BBQ	https://raw.githubusercontent.com/ant1fact/jalapino/main/static/images/food-g9be06d40f_640.jpg	It's not all sunshine and BBQ!	8601 Lindbergh Blvd, 19153 Philadelphia, Pennsylvania	hello@nn-bbq.com	+1 202-918-2132	www.nn-bbq.com	1
 \.
 
 
@@ -1161,14 +1159,6 @@ ALTER TABLE ONLY public.alembic_version
 
 ALTER TABLE ONLY public.categories
     ADD CONSTRAINT categories_pkey PRIMARY KEY (id);
-
-
---
--- Name: customers customers_auth0_id_key; Type: CONSTRAINT; Schema: public; Owner: nullfame
---
-
-ALTER TABLE ONLY public.customers
-    ADD CONSTRAINT customers_auth0_id_key UNIQUE (auth0_id);
 
 
 --
