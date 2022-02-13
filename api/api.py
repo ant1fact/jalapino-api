@@ -1,14 +1,7 @@
 import json
 
-from flask import (
-    Blueprint,
-    Response,
-    abort,
-    jsonify,
-    redirect,
-    request,
-    url_for,
-)
+from flask import (Blueprint, Response, abort, jsonify, redirect, request,
+                   url_for)
 from werkzeug.exceptions import HTTPException
 
 from .auth import AUTH0_DOMAIN, AuthError, requires_auth
@@ -16,7 +9,7 @@ from .auth import AUTH0_DOMAIN, AuthError, requires_auth
 api = Blueprint('api', __name__)
 
 from .config import Config
-from .models import db, Category, Customer, Ingredient, Item, Order, Restaurant
+from .models import Category, Customer, Ingredient, Item, Order, Restaurant, db
 
 
 def _verify_ownership(Model, id: int, auth0_id: str):
@@ -79,12 +72,14 @@ def info():
         'license': {'name': 'MIT', 'url': 'https://spdx.org/licenses/MIT.html'},
     }
 
+
 ### AUTH REDIRECTS ###
 
 
 @api.route('/login')
 def redirect_login():
     return redirect(f'https://{AUTH0_DOMAIN}/authorize', code=302)
+
 
 @api.route('/callback')
 @api.route('/logout')
@@ -99,10 +94,9 @@ def redirect_other():
 def get_restaurants():
     '''Return a list of all restaurants paginated.'''
     page = request.args.get('page', 1, type=int)
-    restaurants = (
-        Restaurant.query.paginate(page=page, per_page=Config.PAGINATE_RESULTS_PER_PAGE)
-        .items
-    )
+    restaurants = Restaurant.query.paginate(
+        page=page, per_page=Config.PAGINATE_RESULTS_PER_PAGE
+    ).items
     return jsonify([r.serialize() for r in restaurants])
 
 
@@ -300,6 +294,7 @@ def get_items_by_ingredient(id: int):
 
 ### ORDERS ###
 
+
 def _assert_same_restaurant(items: list) -> bool:
     '''Check if all Item objects in the list are coming from the same restaurant.'''
     # Return false if the list is empty, or if the contained items are not of type Item
@@ -310,6 +305,7 @@ def _assert_same_restaurant(items: list) -> bool:
     if any(item.restaurant_id != restaurant_id for item in items):
         return False
     return True
+
 
 def _bulk_fetch_items(item_ids: list) -> list:
     '''Convert a list of item ids to a list of Item objects.'''

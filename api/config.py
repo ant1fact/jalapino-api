@@ -9,7 +9,6 @@ class Config:
     SQLALCHEMY_DATABASE_URI = getenv('DBURI_PROD', 'postgresql:///jalapino')
     SQLALCHEMY_RECORD_QUERIES = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_ECHO = False  # Keeping for future reference
 
     PAGINATE_RESULTS_PER_PAGE = 10
 
