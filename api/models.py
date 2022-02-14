@@ -1,7 +1,7 @@
 from flask_sqlalchemy import Model, SQLAlchemy
 from sqlalchemy import inspect
 
-DEFAULT_LOGO_URI = 'https://raw.githubusercontent.com/ant1fact/jalapino/main/static/images/jalapino_150x150.png'
+DEFAULT_LOGO_URI = 'https://raw.githubusercontent.com/ant1fact/jalapino/fullstack/static/images/jalapino_150x150.png'
 PROTECTED_COLUMN_NAMES = {'id', 'auth0_id'}
 
 

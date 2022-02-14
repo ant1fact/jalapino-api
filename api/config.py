@@ -6,7 +6,7 @@ from os import getenv, urandom
 
 class Config:
     SECRET_KEY = getenv('SECRET_KEY', urandom(16))
-    SQLALCHEMY_DATABASE_URI = getenv('DBURI_PROD', 'postgresql:///jalapino')
+    SQLALCHEMY_DATABASE_URI = getenv('DATABASE_URL')
     SQLALCHEMY_RECORD_QUERIES = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
@@ -14,5 +14,4 @@ class Config:
 
 
 class TestConfig(Config):
-    SQLALCHEMY_DATABASE_URI = getenv('DBURI_TEST', 'postgresql:///jalapino_test')
     TESTING = True
