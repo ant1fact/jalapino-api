@@ -1,10 +1,11 @@
 import json
+from os import getenv
 
 from flask import (Blueprint, Response, abort, jsonify, redirect, request,
                    url_for)
 from werkzeug.exceptions import HTTPException
 
-from .auth import AUTH0_DOMAIN, AuthError, requires_auth
+from .auth import AuthError, requires_auth
 
 api = Blueprint('api', __name__)
 
@@ -78,6 +79,7 @@ def info():
 
 @api.route('/login')
 def redirect_login():
+    AUTH0_DOMAIN = getenv('AUTH0_DOMAIN')
     return redirect(f'https://{AUTH0_DOMAIN}/authorize', code=302)
 
 

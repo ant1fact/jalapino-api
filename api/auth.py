@@ -4,13 +4,14 @@ import json
 import logging
 from functools import wraps
 from urllib.request import urlopen
+from os import getenv
 
 from flask import request
 from jose import jwt
 
 ALGORITHMS = ['RS256']
-API_AUDIENCE = 'jalapino'
-AUTH0_DOMAIN = 'nullfame.eu.auth0.com'
+API_AUDIENCE = getenv('API_AUDIENCE')
+AUTH0_DOMAIN = getenv('AUTH0_DOMAIN')
 
 
 class AuthError(Exception):
