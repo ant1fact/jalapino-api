@@ -103,8 +103,8 @@ def redirect_login():
 @api.route('/callback')
 @api.route('/logout')
 def redirect_other():
-    return redirect(url_for('root'), code=302)
-
+    # return redirect(url_for('root'), code=302)
+    return request.args.get('token', '')
 
 ### RESTAURANTS ###
 
