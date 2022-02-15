@@ -1,10 +1,20 @@
 import json
 
-from flask import (Blueprint, Response, abort, jsonify, redirect,
-                   render_template, request, url_for)
+from flask import (
+    Blueprint,
+    Response,
+    abort,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
 from werkzeug.exceptions import HTTPException
+from os import getenv
 
-from .auth import API_AUDIENCE, AUTH0_DOMAIN, AuthError, requires_auth
+
+from .auth import AuthError, requires_auth
 
 api = Blueprint('api', __name__)
 
@@ -95,8 +105,13 @@ def info():
 
 @api.route('/')
 def root():
+    audience = getenv('AUTH0_DOMAIN')
+    client_id = getenv('AUTH0_CLIENTID')
+    domain = getenv('AUTH0_AUDIENCE')
+    redirect_uri = 'https://jalapino-api.herokuapp.com/callback'
+    scope = 'profile email'
     return redirect(
-        f'https://{AUTH0_DOMAIN}/authorize?audience={API_AUDIENCE}&response_type=token&client_id=QtY1VpXv8VmIXR4qH5X5EVbOd2z2SN65&scope=profile email&redirect_uri=https://jalapino-api.herokuapp.com/callback',
+        f'https://{domain}/authorize?audience={audience}&response_type=token&client_id={client_id}&scope={scope}&redirect_uri={redirect_uri}',
         code=302,
     )
 
@@ -108,7 +123,13 @@ def callback():
 
 @api.route('/logout')
 def logout():
-    return redirect(url_for('root'), code=302)
+    client_id = getenv('AUTH0_CLIENTID')
+    domain = getenv('AUTH0_AUDIENCE')
+    return_to = 'https://jalapino-api.herokuapp.com'
+    return redirect(
+        f'https://{domain}/v2/logout?client_id={client_id}&returnTo={return_to}',
+        code=302,
+    )
 
 
 ### RESTAURANTS ###
