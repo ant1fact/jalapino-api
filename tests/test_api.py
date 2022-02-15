@@ -3,7 +3,7 @@ from conftest import create_app
 
 app = create_app()
 
-def test_get_restaurants(client):
+def test_pass_get_restaurants(client):
     response = client.get('/restaurants')
     assert response.status_code == 200    
     restaurants = response.get_json()
@@ -24,7 +24,7 @@ def test_fail_get_restaurants(client):
     assert response.status_code == 404
     assert response.get_json() is None
 
-def test_get_restaurant(client):
+def test_pass_get_restaurant(client):
     response = client.get('/restaurants/1')
     assert response.status_code == 200
     restaurant = response.get_json()
@@ -38,6 +38,10 @@ def test_get_restaurant(client):
 def test_fail_get_restaurant(client):
     response = client.get('/restaurants/somestring')
     assert response.status_code == 404
+
+def test_pass_create_customer(client):
+    response = client.post('/customers')
+    assert response.status_code == 405
 
 def test_fail_get_customers(client):
     response = client.get('/customers')
