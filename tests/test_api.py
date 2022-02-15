@@ -46,8 +46,18 @@ def test_pass_create_customer(client):
         "phone": "1-234-567890",
         "address": "999 Test St, Test City, TE"
     }
-    response = client.post('/customers', json=new_customer_data)
-    assert response.status_code == 405
+    response = client.post('/customers', json={}})
+    assert response.status_code == 401
+
+def test_fail_create_customer(client):
+    new_customer_data = {
+        "name": "TEST",
+        "email": "test@test.com",
+        "phone": "1-234-567890",
+        "address": "999 Test St, Test City, TE"
+    }
+    response = client.post('/customers', json={}})
+    assert response.status_code == 401
 
 def test_fail_get_customers(client):
     response = client.get('/customers')
