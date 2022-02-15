@@ -35,6 +35,10 @@ def test_get_restaurant(client):
     with app.app_context():
         assert Restaurant.query.get(1).categories[0].items[0].ingredients
 
+def test_fail_get_restaurant(client):
+    response = client.get('/restaurants/somestring')
+    assert response.status_code == 404
+
 def test_fail_get_customers(client):
     response = client.get('/customers')
     assert response.status_code == 405
