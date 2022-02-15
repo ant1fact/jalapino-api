@@ -1,8 +1,6 @@
 import json
-from os import getenv
 
-from flask import (Blueprint, Response, abort, jsonify, redirect, request,
-                   url_for)
+from flask import Blueprint, Response, abort, jsonify, redirect, request, url_for
 from werkzeug.exceptions import HTTPException
 
 from .auth import AuthError, requires_auth
@@ -10,7 +8,8 @@ from .auth import AuthError, requires_auth
 api = Blueprint('api', __name__)
 
 from .config import Config
-from .models import Category, Customer, Ingredient, Item, Order, Restaurant, db
+from .models import Category, Customer, Ingredient, Item, Order, Restaurant
+from os import getenv
 
 
 def _verify_ownership(Model, id: int, auth0_id: str):
@@ -20,14 +19,17 @@ def _verify_ownership(Model, id: int, auth0_id: str):
         # No ownership detected, return resource
         return resource
     if resource.auth0_id != auth0_id:
-        abort(403)
+        abort(403, 'Failed to verify ownership of the requested resource.')
     return resource
 
 
 def _prepare_request_data(Model):
     '''Central logic for preparing data coming from POST, PUT and PATCH requests.'''
     if request.method not in {'POST', 'PUT', 'PATCH'}:
-        abort(405)
+        abort(
+            405,
+            'Invalid method. Allowed methods for this operation are: POST, PUT, PATCH',
+        )
     if request.method == 'POST':
         # Requires: All data
         # Server fills in missing data with defaults, except where column.nullable=False
@@ -35,7 +37,11 @@ def _prepare_request_data(Model):
         # Raise 400 (Bad Request) if any data in the final representation is None.
         data = {**Model.defaults(), **request.get_json()}
         if None in data.values():
-            abort(400)
+            missing_data = [k for k in data if data[k] is None]
+            abort(
+                400,
+                f'Must provide missing data for POST request: {" ,".join(missing_data)}',
+            )
         return data
     if request.method == 'PUT':
         # Requires: All data
@@ -44,7 +50,11 @@ def _prepare_request_data(Model):
         data = request.get_json()
         for k in Model.defaults():
             if k not in data or not data[k]:
-                abort(400)
+                missing_data = [k for k in data if data[k] is None]
+                abort(
+                    400,
+                    f'Must provide missing data for PUT request: {" ,".join(missing_data)}',
+                )
         return data
     if request.method == 'PATCH':
         # Requires: Some data
@@ -52,7 +62,11 @@ def _prepare_request_data(Model):
         # i.e. none of the incoming key:value pairs were valid and got filtered out
         data = {k: v for k, v in request.get_json().items() if k in Model.defaults()}
         if not data:
-            abort(400)
+            abort(
+                400,
+                f'No valid data was found to perform the PATCH request. \
+                    Must provide at least one of the following: {" ,".join(Model.defaults())}',
+            )
         return data
 
 
@@ -64,7 +78,8 @@ def info():
     return {
         'title': 'Jalapino - Final project for Udacity Fullstack Nanodegree',
         'version': 0.1,
-        'description': 'Simplified food delivery platform where restaurants can post their items and customers can place orders.',
+        'description': 'Simplified food delivery platform \
+            where restaurants can post their items and customers can place orders.',
         'contact': {
             'name': 'David Pacsuta',
             'email': 'jalapino.test@gmail.com',
@@ -236,6 +251,26 @@ def _process_ingredient_names(item: Item, ingredient_names: list) -> list:
     return item
 
 
+@api.route('/items', methods=['POST'])
+def search_items_by_name():
+    '''Search items by their name, return results paginated.'''
+    data = request.get_json()
+    if data is None:
+        abort(400, 'No json data found in request body.')
+    if 'search_term' not in data:
+        abort(400, 'No search_term has been specified.')
+    search_term = request.json['search_term']
+    if search_term == '':
+        return jsonify([])
+    page = request.args.get('page', 1, type=int)
+    items = (
+        Item.query.filter(Item.name.ilike(f'%{search_term}%'))
+        .paginate(page=page, per_page=Config.PAGINATE_RESULTS_PER_PAGE)
+        .items
+    )
+    return jsonify([i.serialize() for i in items])
+
+
 @api.route('/items/<int:id>')
 def get_item(id: int):
     return Item.query.get_or_404(id).serialize()
@@ -312,10 +347,18 @@ def _assert_same_restaurant(items: list) -> bool:
 def _bulk_fetch_items(item_ids: list) -> list:
     '''Convert a list of item ids to a list of Item objects.'''
     if any(not isinstance(id, int) for id in item_ids):
-        abort(400)
-    items = [Item.query.get(id) for id in item_ids]
+        abort(
+            400,
+            'Invalid type found in list of item ids. \
+            Make sure the list contains integer ids only.',
+        )
+    items = [Item.query.get_or_404(id) for id in item_ids]
     if not _assert_same_restaurant(items):
-        abort(400)
+        abort(
+            400,
+            'Multiple restaurants referenced in the same order. \
+            Make sure all ordered items come from the same restaurant.',
+        )
     return items
 
 
@@ -323,14 +366,14 @@ def _bulk_fetch_items(item_ids: list) -> list:
 @requires_auth('create:order')
 def create_order(payload: dict, id: int):
     '''Create new order, taking customer_id, restaurant_id and a list of items as item ids.'''
-    customer = _verify_ownership(Customer, id, auth0_id=payload['sub'])
+    _verify_ownership(Customer, id, auth0_id=payload['sub'])
     data = _prepare_request_data(Order)
-    if data.customer_id != customer.id:
-        abort(403)
+    data.customer_id = id
     new_order = Order()
     if not data.get('items', []):
-        abort(400)
+        abort(400, 'No item ids have been specified.')
     new_order.items = _bulk_fetch_items(data.pop('items'))
+    new_order.restaurant_id = new_order.items[0].restaurant_id
     new_order.update(data)
     return {'id': new_order.save()}, 201
 

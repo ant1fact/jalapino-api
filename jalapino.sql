@@ -21,17 +21,6 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
--- Name: alembic_version; Type: TABLE; Schema: public; Owner: nullfame
---
-
-CREATE TABLE public.alembic_version (
-    version_num character varying(32) NOT NULL
-);
-
-
-ALTER TABLE public.alembic_version OWNER TO nullfame;
-
---
 -- Name: categories; Type: TABLE; Schema: public; Owner: nullfame
 --
 
@@ -315,15 +304,6 @@ ALTER TABLE ONLY public.orders ALTER COLUMN id SET DEFAULT nextval('public.order
 --
 
 ALTER TABLE ONLY public.restaurants ALTER COLUMN id SET DEFAULT nextval('public.restaurants_id_seq'::regclass);
-
-
---
--- Data for Name: alembic_version; Type: TABLE DATA; Schema: public; Owner: nullfame
---
-
-COPY public.alembic_version (version_num) FROM stdin;
-f7a1aa45ccc4
-\.
 
 
 --
@@ -1146,27 +1126,11 @@ SELECT pg_catalog.setval('public.restaurants_id_seq', 3, true);
 
 
 --
--- Name: alembic_version alembic_version_pkc; Type: CONSTRAINT; Schema: public; Owner: nullfame
---
-
-ALTER TABLE ONLY public.alembic_version
-    ADD CONSTRAINT alembic_version_pkc PRIMARY KEY (version_num);
-
-
---
 -- Name: categories categories_pkey; Type: CONSTRAINT; Schema: public; Owner: nullfame
 --
 
 ALTER TABLE ONLY public.categories
     ADD CONSTRAINT categories_pkey PRIMARY KEY (id);
-
-
---
--- Name: customers customers_email_key; Type: CONSTRAINT; Schema: public; Owner: nullfame
---
-
-ALTER TABLE ONLY public.customers
-    ADD CONSTRAINT customers_email_key UNIQUE (email);
 
 
 --
@@ -1223,14 +1187,6 @@ ALTER TABLE ONLY public.orders_items
 
 ALTER TABLE ONLY public.orders
     ADD CONSTRAINT orders_pkey PRIMARY KEY (id);
-
-
---
--- Name: restaurants restaurants_email_key; Type: CONSTRAINT; Schema: public; Owner: nullfame
---
-
-ALTER TABLE ONLY public.restaurants
-    ADD CONSTRAINT restaurants_email_key UNIQUE (email);
 
 
 --

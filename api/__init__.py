@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, redirect
 from flask_cors import CORS
 from flask_migrate import Migrate
 
@@ -29,5 +29,9 @@ def create_app(config=config.Config):
             'Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE'
         )
         return response
+
+    @app.route('/')
+    def root():
+        return redirect('https://jalapino.herokuapp.com', code=302)
 
     return app

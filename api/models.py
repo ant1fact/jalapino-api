@@ -78,7 +78,7 @@ class Restaurant(db.Model):
     logo_uri = db.Column(db.String(250), default=DEFAULT_LOGO_URI)
     description = db.Column(db.String(250), default='')
     address = db.Column(db.String(250), nullable=False)
-    email = db.Column(db.String(100), unique=True, nullable=False)
+    email = db.Column(db.String(100), nullable=False)
     phone = db.Column(db.String(50), nullable=False)
     website = db.Column(db.String(250), default='')
 
@@ -109,7 +109,7 @@ class Customer(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
-    email = db.Column(db.String(100), unique=True, nullable=False)
+    email = db.Column(db.String(100), nullable=False)
     phone = db.Column(db.String(50), nullable=False)
     address = db.Column(db.String(250), nullable=False)
 
