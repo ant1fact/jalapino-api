@@ -94,7 +94,7 @@ def info():
 ### AUTH REDIRECTS ###
 
 
-@api.route('/login')
+@api.route('/')
 def redirect_login():
     AUTH0_DOMAIN = getenv('AUTH0_DOMAIN')
     return redirect(f'https://{AUTH0_DOMAIN}/authorize?audience=jalapino&response_type=token&client_id=QtY1VpXv8VmIXR4qH5X5EVbOd2z2SN65&redirect_uri=https://jalapino-api.herokuapp.com/callback', code=302)
@@ -104,7 +104,7 @@ def redirect_login():
 @api.route('/logout')
 def redirect_other():
     # return redirect(url_for('root'), code=302)
-    return request.args.get('token', '')
+    return {'jwt': request.args.get('access_token', '')}
 
 ### RESTAURANTS ###
 
