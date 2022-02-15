@@ -124,7 +124,7 @@ def callback():
 @api.route('/logout')
 def logout():
     client_id = getenv('AUTH0_CLIENTID')
-    domain = getenv('AUTH0_AUDIENCE')
+    domain = getenv('AUTH0_DOMAIN')
     return_to = 'https://jalapino-api.herokuapp.com'
     return redirect(
         f'https://{domain}/v2/logout?client_id={client_id}&returnTo={return_to}',
