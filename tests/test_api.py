@@ -40,7 +40,13 @@ def test_fail_get_restaurant(client):
     assert response.status_code == 404
 
 def test_pass_create_customer(client):
-    response = client.post('/customers')
+    new_customer_data = {
+        "name": "TEST",
+        "email": "test@test.com",
+        "phone": "1-234-567890",
+        "address": "999 Test St, Test City, TE"
+    }
+    response = client.post('/customers', json=new_customer_data)
     assert response.status_code == 405
 
 def test_fail_get_customers(client):

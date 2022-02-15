@@ -12,6 +12,7 @@ class Config:
 
     PAGINATE_RESULTS_PER_PAGE = 10
 
+    CUSTOMER_TOKEN = ''
 
 class TestConfig(Config):
     TESTING = True
