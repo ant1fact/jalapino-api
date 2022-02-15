@@ -108,9 +108,8 @@ def root():
     client_id = getenv('AUTH0_CLIENTID')
     domain = getenv('AUTH0_DOMAIN')
     redirect_uri = 'https://jalapino-api.herokuapp.com/callback'
-    scope = r'profile%20email'
     return redirect(
-        f'https://{domain}/authorize?audience={audience}&response_type=token&client_id={client_id}&scope={scope}&redirect_uri={redirect_uri}',
+        f'https://{domain}/authorize?audience={audience}&response_type=token&client_id={client_id}&redirect_uri={redirect_uri}',
         code=302,
     )
 

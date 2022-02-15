@@ -141,16 +141,8 @@ def requires_auth(permission=''):
         @wraps(f)
         def wrapper(*args, **kwargs):  # sourcery skip: raise-from-previous-error
             token = get_token_from_header()
-            try:
-                payload = verify_decode_jwt(token)
-            except Exception as e:
-                logging.error(e)
-                raise AuthError(
-                    {'code': 'token_expired', 'description': 'Token expired.'}, 401
-                )
+            payload = verify_decode_jwt(token)
             check_permission(permission, payload)
             return f(payload, *args, **kwargs)
-
         return wrapper
-
     return requires_auth_decorator
