@@ -105,9 +105,9 @@ def info():
 
 @api.route('/')
 def root():
-    audience = getenv('AUTH0_DOMAIN')
+    audience = getenv('AUTH0_AUDIENCE')
     client_id = getenv('AUTH0_CLIENTID')
-    domain = getenv('AUTH0_AUDIENCE')
+    domain = getenv('AUTH0_DOMAIN')
     redirect_uri = 'https://jalapino-api.herokuapp.com/callback'
     scope = 'profile email'
     return redirect(
