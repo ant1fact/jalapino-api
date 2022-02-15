@@ -96,7 +96,7 @@ def info():
 @api.route('/')
 def root():
     return redirect(
-        f'https://{AUTH0_DOMAIN}/authorize?audience={API_AUDIENCE}&response_type=token&client_id=QtY1VpXv8VmIXR4qH5X5EVbOd2z2SN65&redirect_uri=https://jalapino-api.herokuapp.com/callback',
+        f'https://{AUTH0_DOMAIN}/authorize?audience={API_AUDIENCE}&response_type=token&client_id=QtY1VpXv8VmIXR4qH5X5EVbOd2z2SN65&scope=profile email&redirect_uri=https://jalapino-api.herokuapp.com/callback',
         code=302,
     )
 
