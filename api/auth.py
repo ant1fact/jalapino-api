@@ -1,5 +1,6 @@
 # https://auth0.com/docs/quickstart/backend/python
 
+
 import json
 import logging
 from functools import wraps
@@ -60,7 +61,7 @@ def get_token_from_header():
     return token
 
 
-def verify_decode_jwt(token):
+def verify_decode_jwt(token):  # sourcery skip: raise-from-previous-error
     jsonurl = urlopen(f'https://{AUTH0_DOMAIN}/.well-known/jwks.json')
     jwks = json.loads(jsonurl.read())
     unverified_header = jwt.get_unverified_header(token)
@@ -138,7 +139,7 @@ def check_permission(permission, payload):
 def requires_auth(permission=''):
     def requires_auth_decorator(f):
         @wraps(f)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args, **kwargs):  # sourcery skip: raise-from-previous-error
             token = get_token_from_header()
             try:
                 payload = verify_decode_jwt(token)

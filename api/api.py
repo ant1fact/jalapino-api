@@ -1,15 +1,17 @@
 import json
 
-from flask import Blueprint, Response, abort, jsonify, redirect, request, url_for
+from flask import (Blueprint, Response, abort, jsonify, redirect, request,
+                   url_for)
 from werkzeug.exceptions import HTTPException
 
 from .auth import AuthError, requires_auth
 
 api = Blueprint('api', __name__)
 
-from .config import Config
-from .models import Category, Customer, Ingredient, Item, Order, Restaurant
 from os import getenv
+
+from .config import Config
+from .models import *
 
 
 def _verify_ownership(Model, id: int, auth0_id: str):
@@ -70,7 +72,7 @@ def _prepare_request_data(Model):
         return data
 
 
-### INFO ###
+### API INFO ###
 
 
 @api.route('/info')
@@ -396,6 +398,7 @@ def get_restaurant_orders(payload: dict, id: int):
 
 ### ERROR HANDLING ###
 
+# Handles all error codes as opposed to the minimum 4 required by the project spec
 # https://flask.palletsprojects.com/en/2.0.x/errorhandling/#generic-exception-handlers
 @api.errorhandler(HTTPException)
 def handle_exception(e):
