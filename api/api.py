@@ -1,7 +1,7 @@
 import json
 
-from flask import (Blueprint, Response, abort, jsonify, redirect, request,
-                   url_for)
+from flask import (Blueprint, Response, abort, jsonify, redirect,
+                   render_template, request, url_for)
 from werkzeug.exceptions import HTTPException
 
 from .auth import API_AUDIENCE, AUTH0_DOMAIN, AuthError, requires_auth
@@ -103,19 +103,7 @@ def root():
 
 @api.route('/callback')
 def callback():
-    return '''
-    <script>
-      const hash = window.location.hash.substr(1);
-      const result = hash.split('&').reduce(function (res, item) {
-        const parts = item.split('=');
-        res[parts[0]] = parts[1];
-        return res;
-      }, \{\});
-      const p = document.createElement('p');
-      const jwt = document.createTextNode(result.access_token);
-      p.appendChild(jwt);
-    </script>
-    '''
+    return render_template('jwt.html')
 
 
 @api.route('/logout')
