@@ -6,7 +6,7 @@ from os import getenv, urandom
 
 class Config:
     SECRET_KEY = getenv('SECRET_KEY', urandom(16))
-    SQLALCHEMY_DATABASE_URI = getenv('DATABASE_URL')
+    SQLALCHEMY_DATABASE_URI = getenv('SQLALCHEMY_DATABASE_URI')
     SQLALCHEMY_RECORD_QUERIES = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
