@@ -331,9 +331,9 @@ Drinks	3	12
 --
 
 COPY public.customers (auth0_id, address, name, phone, id, email) FROM stdin;
-auth0|test	99 Some St., Town, State	TEST	1-234-5678910	3	test@test.com
-auth0|test2	99 Some St., Town, State	TEST2	1-234-5678910	5	test2@test.com
-auth0|test3	99 Some St., Town, State	TEST3	1-234-5678910	6	test3@test.com
+auth0|61f84916bf1df9007137d347	99 Some St., Town, State	TEST	1-234-5678910	3	test@test.com
+auth0|61f84916bf1df9007137d347	99 Some St., Town, State	TEST2	1-234-5678910	5	test2@test.com
+auth0|61f84916bf1df9007137d347	99 Some St., Town, State	TEST3	1-234-5678910	6	test3@test.com
 \.
 
 
@@ -1187,14 +1187,6 @@ ALTER TABLE ONLY public.orders_items
 
 ALTER TABLE ONLY public.orders
     ADD CONSTRAINT orders_pkey PRIMARY KEY (id);
-
-
---
--- Name: restaurants restaurants_name_key; Type: CONSTRAINT; Schema: public; Owner: nullfame
---
-
-ALTER TABLE ONLY public.restaurants
-    ADD CONSTRAINT restaurants_name_key UNIQUE (name);
 
 
 --

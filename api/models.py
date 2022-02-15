@@ -38,6 +38,7 @@ class CRUDModel(Model):
         '''Delete record from database and return ID if successful, otherwise None.'''
         try:
             self.__class__.query.filter_by(id=self.id).delete()
+            db.session.commit()
         except Exception as error:
             db.session.rollback()
             return error
@@ -74,7 +75,7 @@ class Restaurant(db.Model):
     auth0_id = db.Column(db.String(50), nullable=False)
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), unique=True, nullable=False)
+    name = db.Column(db.String(50), nullable=False)
     logo_uri = db.Column(db.String(250), default=DEFAULT_LOGO_URI)
     description = db.Column(db.String(250), default='')
     address = db.Column(db.String(250), nullable=False)
