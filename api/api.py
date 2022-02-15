@@ -97,7 +97,7 @@ def info():
 @api.route('/login')
 def redirect_login():
     AUTH0_DOMAIN = getenv('AUTH0_DOMAIN')
-    return redirect(f'https://{AUTH0_DOMAIN}/authorize', code=302)
+    return redirect(f'https://{AUTH0_DOMAIN}/authorize?audience=jalapino&response_type=token&client_id=QtY1VpXv8VmIXR4qH5X5EVbOd2z2SN65&redirect_uri=https://jalapino-api.herokuapp.com/callback', code=302)
 
 
 @api.route('/callback')
