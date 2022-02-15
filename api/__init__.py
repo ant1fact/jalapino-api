@@ -30,8 +30,8 @@ def create_app(config=config.Config):
         )
         return response
 
-    @app.route('/')
-    def root():
-        return redirect('https://jalapino.herokuapp.com', code=302)
+    # @app.route('/')
+    # def root():
+    #     return redirect('https://jalapino.herokuapp.com', code=302)
 
     return app
