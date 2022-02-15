@@ -4,11 +4,10 @@ from flask import (Blueprint, Response, abort, jsonify, redirect, request,
                    url_for)
 from werkzeug.exceptions import HTTPException
 
-from .auth import AuthError, requires_auth
+from .auth import API_AUDIENCE, AUTH0_DOMAIN, AuthError, requires_auth
 
 api = Blueprint('api', __name__)
 
-from os import getenv
 
 from .config import Config
 from .models import *
@@ -95,16 +94,34 @@ def info():
 
 
 @api.route('/')
-def redirect_login():
-    AUTH0_DOMAIN = getenv('AUTH0_DOMAIN')
-    return redirect(f'https://{AUTH0_DOMAIN}/authorize?audience=jalapino&response_type=token&client_id=QtY1VpXv8VmIXR4qH5X5EVbOd2z2SN65&redirect_uri=https://jalapino-api.herokuapp.com/callback', code=302)
+def root():
+    return redirect(
+        f'https://{AUTH0_DOMAIN}/authorize?audience={API_AUDIENCE}&response_type=token&client_id=QtY1VpXv8VmIXR4qH5X5EVbOd2z2SN65&redirect_uri=https://jalapino-api.herokuapp.com/callback',
+        code=302,
+    )
 
 
 @api.route('/callback')
+def callback():
+    return '''
+    <script>
+      const hash = window.location.hash.substr(1);
+      const result = hash.split('&').reduce(function (res, item) {
+        const parts = item.split('=');
+        res[parts[0]] = parts[1];
+        return res;
+      }, \{\});
+      const p = document.createElement('p');
+      const jwt = document.createTextNode(result.access_token);
+      p.appendChild(jwt);
+    </script>
+    '''
+
+
 @api.route('/logout')
-def redirect_other():
-    # return redirect(url_for('root'), code=302)
-    return {'jwt': request.args.get('access_token', '')}
+def logout():
+    return redirect(url_for('root'), code=302)
+
 
 ### RESTAURANTS ###
 

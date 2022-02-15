@@ -11,8 +11,8 @@ from flask import request
 from jose import jwt
 
 ALGORITHMS = ['RS256']
-API_AUDIENCE = getenv('API_AUDIENCE')
 AUTH0_DOMAIN = getenv('AUTH0_DOMAIN')
+API_AUDIENCE = getenv('API_AUDIENCE')
 
 
 class AuthError(Exception):
