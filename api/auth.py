@@ -12,7 +12,7 @@ from jose import jwt
 
 ALGORITHMS = ['RS256']
 AUTH0_DOMAIN = getenv('AUTH0_DOMAIN')
-API_AUDIENCE = getenv('API_AUDIENCE')
+AUTH0_AUDIENCE = getenv('AUTH0_AUDIENCE')
 
 
 class AuthError(Exception):
@@ -87,7 +87,7 @@ def verify_decode_jwt(token):  # sourcery skip: raise-from-previous-error
                 token,
                 rsa_key,
                 algorithms=ALGORITHMS,
-                audience=API_AUDIENCE,
+                audience=AUTH0_AUDIENCE,
                 issuer=f'https://{AUTH0_DOMAIN}/',
             )
 
