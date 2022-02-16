@@ -1,9 +1,10 @@
-# 🌶️ Jalapino API Reference
+# 🌶️ Jalapiño  API Reference
+
+_Welcome to Jalapiño, a platform created to enable restaurants and customers to come together for a feast of foods in a delivery bonanza._
 
 ## Intro
 
-This documentation aims to be a comprehensive aid in using the Jalapino API endpoints.  
-The API follows RESTful design principles & best practices, e.g. nouns as resource identifiers as well as accepting and returning data in JSON format.
+This documentation aims to be a comprehensive aid in using the Jalapino API endpoints. The API follows RESTful design principles & best practices, e.g. nouns as resource identifiers as well as accepting and returning data in JSON format.
 
 
 // Base URL
@@ -13,7 +14,7 @@ https://jalapino-api.herokuapp.com
 
 ---
 
-## Authentication
+## Authentication & Authorization
 
 ⚠️ Registration is currently closed.
 
@@ -41,7 +42,12 @@ Test accounts are provided for each of the two distinct user **roles**
 `read:order`
 
 ℹ️ There are two ways to authenticate:  
-1) Use the provided JWTs directly
+1) Use the provided JWTs directly. To add them to your environment variables, run the following command:
+```bash
+source env.sh
+$CUSTOMER_TOKEN
+$RESTAURANT_TOKEN
+```
 2) Login with the credentials using the login prompt on the main page. Upon successful login the user will be redirected to a page that displays the newly generated JWT for the account.
 
 ⚠️ Make sure to generate a new token if the existing one(s) don't work. In case of running the tests with pytest, the new token must be updated in config.py
@@ -49,6 +55,8 @@ Test accounts are provided for each of the two distinct user **roles**
 ```
 https://jalapino-api.herokuapp.com
 ```
+<details>
+<p><summary><b>🔐 Reveal Credentials</b></summary></p>
 
 ##### Test Customer #0 *(JWT as in config.py)*
 ```
@@ -78,6 +86,8 @@ Test+Restaurant123
 jalapino.test+restaurant2@gmail.com
 Test+Restaurant123
 ```
+
+</details>
 
 ---
 
@@ -131,6 +141,7 @@ curl -X GET 'https://jalapino-api.herokuapp.com/info'
 ```
 ```jsonc
 // Sample response
+200 OK
 {
   "contact": {
     "email": "jalapino.test@gmail.com",
@@ -147,12 +158,10 @@ curl -X GET 'https://jalapino-api.herokuapp.com/info'
 }
 ```
 
----
-
 ### GET /restaurants
 
-ℹ️ Return a list of all restaurant objects paginated. The default number of items per page is 10.<br>
-⚠️ If the ?page query parameter is beyond the number of available pages, a 404 error will be returned.
+ℹ️ Return a list of all restaurant objects paginated. The default number of items per page is 10<br>
+⚠️ If the ?page query parameter is beyond the number of available pages, a 404 error will be returned
 
 ```bash
 # Sample request
@@ -160,6 +169,7 @@ curl -X GET 'https://jalapino-api.herokuapp.com/restaurants?page=1'
 ```
 ```jsonc
 // Sample response
+200 OK
 [
   {
     "address": "8601 Lindbergh Blvd, 19153 Philadelphia, Pennsylvania",
@@ -223,12 +233,9 @@ curl -X GET 'https://jalapino-api.herokuapp.com/restaurants?page=1'
 ]
 ```
 
----
-
 ### GET /restaurant/:id
 
-
-ℹ️ Returns the requested restaurant object by its ID or 404 if it is not found.
+ℹ️ Returns the requested restaurant object by its id or 404 if it is not found
 
 ```bash
 # Sample request
@@ -236,6 +243,7 @@ curl -X GET 'https://jalapino-api.herokuapp.com/restaurants/1'
 ```
 ```jsonc
 // Sample response
+200 OK
 {
   "description": "It's not all sunshine and BBQ!",
   "email": "hello@nn-bbq.com",
@@ -248,106 +256,162 @@ curl -X GET 'https://jalapino-api.herokuapp.com/restaurants/1'
 }
 ```
 
----
-
 ### POST /restaurants
 
-ℹ️ Create a new restaurant in the database. On successful creation, it returns the ID of the new object with status code 201.  
-⚠️ The auth0 account used to create the new resource becomes the owner which will be required for any subsequent edits or deletion of the resource.
+ℹ️ Create a new restaurant in the database. On successful creation, it returns the id of the new object with status code 201   
+⚠️ The auth0 account used to create the new resource becomes the owner which will be required for any subsequent edits or deletion of the resource
+
+Required data
+```jsonc
+"address"
+"email"  
+"name"  
+"phone"  
+```
 
 ```bash
 # Sample request
+TOKEN=$RESTAURANT_TOKEN
 curl -X POST 'https://jalapino-api.herokuapp.com/restaurants' -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -d '{"name": "TEST_RESTAURANT", "email": "test-restaurant@test.com", "phone": "1-234-567890", "address": "111 Testreet, Testown"}'
 ```
 ```jsonc
 // Sample response
-{"id": <id>}
+201 CREATED
+{"id": 1}
 ```
 
----
+### PUT /restaurants/:id
 
-#### POST /questions  
+ℹ️ Update the full representation of a restaurant resource  
+⚠️ Requires ownership of the resource
 
-*Search questions by title*
-
-ℹ️ Case-insensitive search in question titles. Partial search terms supported. Returns questions in the same format as `GET /questions`.
+Required data
+```jsonc
+"address"
+"description"  
+"email"  
+"logo_uri"  
+"name"  
+"phone"  
+"website"  
+```
 
 ```bash
 # Sample request
-curl -X POST 'localhost:5000/questions' -H "Content-Type: application/json" -d '{"searchTerm": "title"}'
+TOKEN=$RESTAURANT_TOKEN
+curl -X PUT 'https://jalapino-api.herokuapp.com/restaurants/1' -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -d '{"name": "Renamed Restaurant", "email": "renamed-restaurant@test.com", "phone": "1-876-543210", "address": "42 Sesame St, Foodtown", "description": "The Sun shines on us again.", "logo_uri": "https://raw.githubusercontent.com/ant1fact/jalapino/main/static/images/food-g9be06d40f_640.jpg", "website": "www.nn-bbq.com"}'
 ```
-```javascript
+```jsonc
 // Sample response
-{
-  "current_category": null, 
-  "questions": [
-    {
-      "answer": "Edward Scissorhands", 
-      "category": 5, 
-      "difficulty": 3, 
-      "id": 6, 
-      "question": "What was the title of the 1990 fantasy directed by Tim Burton about a young man with multi-bladed appendages?"
-    }
-  ], 
-  "total_questions": 1
-}
+200 OK
 ```
+### PATCH /restaurants/:id
 
----
-
-#### POST /quiz  
-
-ℹ️ Play the trivia quiz. Returns a single random question either from a specific or a random category. The endpoint requires a list of `previous_questions` containing as elements the database IDs of previously displayed questions in the current quiz game. The request must also specify the `quiz_category` in the following format: {"id": "1", "type": "Science"}.  
-⚠️ If no category is selected, the ID should be set to "0".
+ℹ️ Partially update the representation of a restaurant resource  
+⚠️ Requires ownership of the resource
 
 ```bash
 # Sample request
-curl -X POST 'localhost:5000/quiz' \
--H "Content-Type: application/json" \
--d '{"previous_questions": [], "quiz_category": {"id": "1", "type": "Science"}}'
+TOKEN=$RESTAURANT_TOKEN
+curl -X PATCH 'https://jalapino-api.herokuapp.com/restaurants/1' -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -d '{"name": "Doubly Renamed Restaurant"}'
 ```
-```javascript
+```jsonc
 // Sample response
-{
-  "question": {
-    "answer": "The Liver", 
-    "category": 1, 
-    "difficulty": 4, 
-    "id": 20, 
-    "question": "What is the heaviest organ in the human body?"
-  }
-}
+200 OK
 ```
 
----
+### DELETE /restaurants/:id
 
-#### DELETE /questions/:id
-
-ℹ️ Delete a question from the database. On successful deletion, returns the questions as defined by `GET /questions` + the requested ID as "deleted_id".
+ℹ️ Delete restaurant resource by id  
+⚠️ Requires ownership of the resource
 
 ```bash
 # Sample request
-curl -X DELETE 'localhost:5000/questions/1'
+TOKEN=$RESTAURANT_TOKEN
+curl -X DELETE 'https://jalapino-api.herokuapp.com/restaurants/1' -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}"
 ```
-```javascript
+```jsonc
 // Sample response
+200 OK
+```
+
+### GET /customers/:id
+
+ℹ️ Returns the requested customer object by its id or 404 if it is not found  
+⚠️ For data security reasons, this GET endpoint requires ownership of the resource
+
+```bash
+# Sample request
+TOKEN=$CUSTOMER_TOKEN
+curl -X GET 'https://jalapino-api.herokuapp.com/customers/1' -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}"
+```
+```jsonc
+// Sample response
+200 OK
 {
-  "categories": {
-    "1": "Science", 
-    "2": "Art", 
-    "3": "Geography", 
-    "4": "History", 
-    "5": "Entertainment", 
-    "6": "Sports"
-  }, 
-  "current_category": null, 
-  "deleted_id": 1, 
-  "questions": [...],
-  "total_questions": 20
+  "id": 1,
+  "name": "TEST_CUSTOMER",
+  "address": "99 Some St., Town, State",
+  "phone": "1-234-5678910",
+  "email": "test@test.com",
+  "orders": []
 }
 ```
 
----
+### POST /customers
+
+ℹ️ Create a new customer profile in the database. On successful creation, it returns the id of the new object with status code 201   
+⚠️ The auth0 account used to create the new resource becomes the owner which will be required for any subsequent edits or deletion of the resource
+
+Required data
+```jsonc
+"name"  
+"address"
+"phone"  
+"email"  
+```
+
+```bash
+# Sample request
+TOKEN=$CUSTOMER_TOKEN
+curl -X POST 'https://jalapino-api.herokuapp.com/customers' -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -d '{"name": "TEST_CUSTOMER", "email": "test-customer@test.com", "phone": "1-151-15660850", "address": "111 Custom St, Customtown"}'
+```
+```jsonc
+// Sample response
+201 CREATED
+{"id": 1}
+```
+
+### PATCH /customers/:id
+
+ℹ️ Partially update the representation of a customer profile  
+⚠️ Requires ownership of the resource
+
+```bash
+# Sample request
+TOKEN=$CUSTOMER_TOKEN
+curl -X PATCH 'https://jalapino-api.herokuapp.com/customers/1' -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -d '{"name": "Crusty Customer"}'
+```
+```jsonc
+// Sample response
+200 OK
+```
+
+### DELETE /customers/:id
+
+ℹ️ Delete customer profile by id  
+⚠️ Requires ownership of the resource
+
+```bash
+# Sample request
+TOKEN=$CUSTOMER_TOKEN
+curl -X DELETE 'https://jalapino-api.herokuapp.com/customers/1' -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}"
+```
+```jsonc
+// Sample response
+200 OK
+```
+
 
 ## Error handling
 
@@ -371,12 +435,11 @@ curl -X DELETE 'localhost:5000/questions/1'
 }
 ```
 
-
 ## Contributing to the Jalapino API
 
 All of the backend code is formatted using [Black](https://github.com/psf/black). Imports are sorted using the `Python Refactor: Sort Imports` command available as part of the Python extension for VSCode.
 
-To run the backend locally:
+ℹ️ To run the backend locally
 ```bash
 # Set up the environment
 python -m venv .venv
@@ -388,7 +451,7 @@ createdb jalapino
 psql jalapino < jalapino.sql
 
 # Export environment variables
-source env
+source env.sh
 
 # Run the tests (Optional)
 python -m pytest
