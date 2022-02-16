@@ -100,21 +100,21 @@ https://jalapino-api.herokuapp.com
 ## List of all endpoints
 
 // API Info  
-`GET /info`  
+[`GET /info`](#get-info)  
 
 // Restaurants  
-`GET /restaurants`  
-`GET /restaurant/:id`  
-`POST /restaurants`  
-`PUT /restaurant/:id`  
-`PATCH /restaurant/:id`  
-`DELETE /restaurant/:id`
+[`GET /restaurants`](#get-restaurants)  
+[`GET /restaurants/:id`](#get-restaurantsid)  
+[`POST /restaurants`](#post-restaurants)   
+[`PUT /restaurants/:id`](#put-restaurantsid)  
+[`PATCH /restaurants/:id`](#patch-restaurantsid)  
+[`DELETE /restaurants/:id`](#delete-restaurantsid)
 
 // Customers  
-`GET /customers/:id`  
-`POST /customers`  
-`PATCH /customers/:id`  
-`DELETE /customers/:id` 
+[`GET /customers/:id`](#get-customersid)  
+[`POST /customers`](#post-customers)   
+[`PATCH /customers/:id`](#patch-customersid)   
+[`DELETE /customers/:id`](#delete-customersid) 
 
 // Categories  
 `POST /restaurant/:id/categories`  
@@ -161,6 +161,7 @@ curl -X GET 'https://jalapino-api.herokuapp.com/info'
   "version": 0.1
 }
 ```
+[`Return to list of endpoints`](#list-of-all-endpoints)
 
 ### GET /restaurants
 
@@ -236,8 +237,9 @@ curl -X GET 'https://jalapino-api.herokuapp.com/restaurants?page=1'
   }
 ]
 ```
+[`Return to list of endpoints`](#list-of-all-endpoints)
 
-### GET /restaurant/:id
+### GET /restaurants/:id
 
 ℹ️ Returns the requested restaurant object by its id or 404 if it is not found
 
@@ -259,6 +261,7 @@ curl -X GET 'https://jalapino-api.herokuapp.com/restaurants/1'
   "categories": [...] // Same format as in GET /restaurants
 }
 ```
+[`Return to list of endpoints`](#list-of-all-endpoints)
 
 ### POST /restaurants
 
@@ -283,6 +286,7 @@ curl -X POST 'https://jalapino-api.herokuapp.com/restaurants' -H "Content-Type: 
 201 CREATED
 {"id": 1}
 ```
+[`Return to list of endpoints`](#list-of-all-endpoints)
 
 ### PUT /restaurants/:id
 
@@ -309,6 +313,8 @@ curl -X PUT 'https://jalapino-api.herokuapp.com/restaurants/1' -H "Content-Type:
 // Sample response
 200 OK
 ```
+[`Return to list of endpoints`](#list-of-all-endpoints)
+
 ### PATCH /restaurants/:id
 
 ℹ️ Partially update the representation of a restaurant resource  
@@ -323,6 +329,7 @@ curl -X PATCH 'https://jalapino-api.herokuapp.com/restaurants/1' -H "Content-Typ
 // Sample response
 200 OK
 ```
+[`Return to list of endpoints`](#list-of-all-endpoints)
 
 ### DELETE /restaurants/:id
 
@@ -338,6 +345,7 @@ curl -X DELETE 'https://jalapino-api.herokuapp.com/restaurants/1' -H "Content-Ty
 // Sample response
 200 OK
 ```
+[`Return to list of endpoints`](#list-of-all-endpoints)
 
 ### GET /customers/:id
 
@@ -361,6 +369,7 @@ curl -X GET 'https://jalapino-api.herokuapp.com/customers/1' -H "Content-Type: a
   "orders": []
 }
 ```
+[`Return to list of endpoints`](#list-of-all-endpoints)
 
 ### POST /customers
 
@@ -385,6 +394,7 @@ curl -X POST 'https://jalapino-api.herokuapp.com/customers' -H "Content-Type: ap
 201 CREATED
 {"id": 1}
 ```
+[`Return to list of endpoints`](#list-of-all-endpoints)
 
 ### PATCH /customers/:id
 
@@ -400,6 +410,7 @@ curl -X PATCH 'https://jalapino-api.herokuapp.com/customers/1' -H "Content-Type:
 // Sample response
 200 OK
 ```
+[`Return to list of endpoints`](#list-of-all-endpoints)
 
 ### DELETE /customers/:id
 
@@ -415,6 +426,7 @@ curl -X DELETE 'https://jalapino-api.herokuapp.com/customers/1' -H "Content-Type
 // Sample response
 200 OK
 ```
+[`Return to list of endpoints`](#list-of-all-endpoints)
 
 
 ## Error handling
