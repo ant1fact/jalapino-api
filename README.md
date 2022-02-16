@@ -16,7 +16,7 @@ https://jalapino-api.herokuapp.com
 
 ## Authentication & Authorization
 
-⚠️ Registration is currently closed.
+#### ⚠️ Registration is currently closed.
 
 Test accounts are provided for each of the two distinct user **roles**  
 (Under each role listed are their scope aka permissions)  
@@ -41,24 +41,29 @@ Test accounts are provided for each of the two distinct user **roles**
 `delete:item`
 `read:order`
 
-ℹ️ There are two ways to authenticate:  
-1) Use the provided JWTs directly. To add them to your environment variables, run the following command:
+#### There are two ways to authenticate, you can use either one
+#### 🔐 1) Use the provided JWTs directly. To add them to your environment variables, run the following command:
 ```bash
 source env.sh
 $CUSTOMER_TOKEN
 $RESTAURANT_TOKEN
 ```
-2) Login with the credentials using the login prompt on the main page. Upon successful login the user will be redirected to a page that displays the newly generated JWT for the account.
 
-⚠️ Make sure to generate a new token if the existing one(s) don't work. In case of running the tests with pytest, the new token must be updated in config.py
+ℹ️ _These tokens have ownership of the preloaded resources in the DB, meaning that any pre-existing data in the DB can only be modified or deleted with these JWTs where the endpoint specifies "Requires ownership of the resource"_
+
+---
+
+#### 🔐 2) Login with the credentials using the login prompt on the main page. Upon successful login the user will be redirected to a page that displays the newly generated JWT for the account.
+
+ℹ️ _Make sure to generate a new token this way if the existing one(s) don't work and update the **$CUSTOMER_TOKEN** and **$RESTAURANT_TOKEN** environment variables accordingly_
 
 ```
 https://jalapino-api.herokuapp.com
 ```
 <details>
-<p><summary><b>🔐 Reveal Credentials</b></summary></p>
+<summary><h3>🔐 Reveal Credentials</h3></summary>
 
-##### Test Customer #0 *(JWT as in config.py)*
+##### Test Customer #0 *($CUSTOMER_TOKEN)*
 ```
 eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkJGV2Frc1dVRmlQRmpLd25fakotUSJ9.eyJpc3MiOiJodHRwczovL251bGxmYW1lLmV1LmF1dGgwLmNvbS8iLCJzdWIiOiJhdXRoMHw2MWY4NDkxNmJmMWRmOTAwNzEzN2QzNDciLCJhdWQiOiJqYWxhcGlubyIsImlhdCI6MTY0NDk2MDMzMiwiZXhwIjoxNjQ1MDQ2NzMyLCJhenAiOiJRdFkxVnBYdjhWbUlYUjRxSDVYNUVWYk9kMnoyU042NSIsInNjb3BlIjoiIiwicGVybWlzc2lvbnMiOlsiY3JlYXRlOmN1c3RvbWVyIiwiY3JlYXRlOm9yZGVyIiwiZGVsZXRlOmN1c3RvbWVyIiwicmVhZDpjdXN0b21lciIsInJlYWQ6b3JkZXIiLCJ1cGRhdGU6Y3VzdG9tZXIiXX0.ok225364i_xczyDOlJHoGrkBEqGs9AWHiydv0NYghaDruCbj3gE4tSl90Hj-rtjT3bofnhxaDvCd7w4dI45flJLtGORS51BwLEYeD99MmFE0UyIYZ_gDiihu3NTG-g0zf6EelzKLfQF0zrd21uFaTOkh7eo3z3cLAQBYzqXnZRjiF5iYnhaXRoKn9DaDLbXiFKgyZ0o5Bs1DxL2ZKJcbETQqhxSSmajUsHCAtkP3M0ik1PG0P_L6Hhu_bSp37BDxD-zWZgcm2CG79iy4634PtPC6QBCIcxuj-P4M3I9XVLxgdUS0Nwx1tpHJUM0pTo2Sw2RUWcwzPyuLpJH36kVDHg
 ```
@@ -72,7 +77,7 @@ Test+Customer123
 jalapino.test+customer2@gmail.com
 Test+Customer123
 ```
-##### Test Restaurant #0 *(JWT as in config.py)*
+##### Test Restaurant #0 *($RESTAURANT_TOKEN)*
 ```
 eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkJGV2Frc1dVRmlQRmpLd25fakotUSJ9.eyJpc3MiOiJodHRwczovL251bGxmYW1lLmV1LmF1dGgwLmNvbS8iLCJzdWIiOiJhdXRoMHw2MWY4NDhkMTkwYjYwZjAwNzBmMmYyOTQiLCJhdWQiOiJqYWxhcGlubyIsImlhdCI6MTY0NDk2MDM5OSwiZXhwIjoxNjQ1MDQ2Nzk5LCJhenAiOiJRdFkxVnBYdjhWbUlYUjRxSDVYNUVWYk9kMnoyU042NSIsInNjb3BlIjoiIiwicGVybWlzc2lvbnMiOlsiY3JlYXRlOmNhdGVnb3J5IiwiY3JlYXRlOml0ZW0iLCJjcmVhdGU6cmVzdGF1cmFudCIsImRlbGV0ZTpjYXRlZ29yeSIsImRlbGV0ZTppdGVtIiwiZGVsZXRlOnJlc3RhdXJhbnQiLCJyZWFkOm9yZGVyIiwidXBkYXRlOmNhdGVnb3J5IiwidXBkYXRlOml0ZW0iLCJ1cGRhdGU6cmVzdGF1cmFudCJdfQ.thvmO0kpsuGmp-GGchzNHmC8MqRQWSOlazIPeUsRy_NpyB1YNQOAy4QtigEJHRxIkJ5WSBH-ivfbQ-gU08PZ5NLZOEUS_MPRM6RpYiC1e5m7Br0KZsySVQTouZAPv66iXhNrLg86RXtQ3-Ho_7_21FT5D8Rgs-6IiWgoLucNxQZWyxDNBccu05Mb6JN4kXlNpPWf9r4foV9JK59cBAJwsYhzJQNneUnozLgLSK9U0YOndQLQ1Jxr5KC6Kjnv1eSzpYbhXQN65uc-QzgvS5xqF8PbcTV8Us0N-IZPpH7IC10fcTY0YM2OIHvm852u2de-fV1Gqard8S_hNhU6-FhS0Q
 ```
