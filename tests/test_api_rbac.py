@@ -1,4 +1,3 @@
-from urllib import response
 from api.models import Category, Customer, Item, Restaurant
 
 from conftest import create_app, make_auth_header

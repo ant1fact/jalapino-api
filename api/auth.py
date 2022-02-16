@@ -2,17 +2,17 @@
 
 
 import json
-import logging
 from functools import wraps
 from urllib.request import urlopen
-from os import getenv
 
 from flask import request
 from jose import jwt
 
+from .config import Config
+
 ALGORITHMS = ['RS256']
-AUTH0_DOMAIN = getenv('AUTH0_DOMAIN')
-AUTH0_AUDIENCE = getenv('AUTH0_AUDIENCE')
+AUTH0_DOMAIN = Config.AUTH0_DOMAIN
+AUTH0_AUDIENCE = Config.AUTH0_AUDIENCE
 
 
 class AuthError(Exception):

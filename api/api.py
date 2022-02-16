@@ -1,5 +1,4 @@
 import json
-from os import getenv
 
 from flask import (
     Blueprint,
@@ -117,9 +116,9 @@ def info():
 
 @api.route('/')
 def root():
-    audience = getenv('AUTH0_AUDIENCE')
-    client_id = getenv('AUTH0_CLIENTID')
-    domain = getenv('AUTH0_DOMAIN')
+    audience = Config.AUTH0_AUDIENCE
+    client_id = Config.AUTH0_CLIENTID
+    domain = Config.AUTH0_DOMAIN
     redirect_uri = 'https://jalapino-api.herokuapp.com/callback'
     return redirect(
         f'https://{domain}/authorize?audience={audience}&response_type=token&client_id={client_id}&redirect_uri={redirect_uri}',
@@ -134,8 +133,8 @@ def callback():
 
 @api.route('/logout')
 def logout():
-    client_id = getenv('AUTH0_CLIENTID')
-    domain = getenv('AUTH0_DOMAIN')
+    client_id = Config.AUTH0_CLIENTID
+    domain = Config.AUTH0_DOMAIN
     return_to = 'https://jalapino-api.herokuapp.com'
     return redirect(
         f'https://{domain}/v2/logout?client_id={client_id}&returnTo={return_to}',
