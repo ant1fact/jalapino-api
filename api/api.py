@@ -51,8 +51,10 @@ def _prepare_request_data(Model):
         # Server fills in missing data with defaults, except where column.nullable=False
         # in which case the data must come from the client.
         # Raise 400 (Bad Request) if any data in the final representation is None.
-        req_json = _get_json_or_abort()
-        data = {**Model.defaults(), **req_json}
+        try:
+            data = {**Model.defaults(), **request.get_json()}
+        except TypeError:
+            abort(400, 'Invalid JSON representation or no data found.')
         if None in data.values():
             missing_data = [k for k in data if data[k] is None]
             abort(
@@ -236,8 +238,7 @@ def delete_customer(payload: dict, id: int):
 def create_category(payload: dict, id: int):
     restaurant = _verify_ownership(Restaurant, id, auth0_id=payload['sub'])
     new_category = Category()
-    data = _prepare_request_data(Restaurant)
-    new_category.update(data)
+    new_category.name = request.get_json().get('name', 'New Category')
     new_category.restaurant_id = restaurant.id
 
     return {'id': new_category.save()}, 201

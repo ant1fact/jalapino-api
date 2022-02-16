@@ -1,4 +1,5 @@
-from api.models import Customer, Restaurant
+from urllib import response
+from api.models import Category, Customer, Restaurant
 
 from conftest import create_app, make_auth_header
 
@@ -70,7 +71,7 @@ def test_pass_update_restaurant(client):
             headers=make_auth_header('restaurant'),
         )
         assert response.status_code == 200
-        restaurant = Restaurant.query.get_or_404(1)
+        restaurant = Restaurant.query.get_or_404(latest_id)
         assert restaurant.name == 'Renamed Restaurant'
 
 
@@ -184,46 +185,93 @@ def test_fail_delete_customer(client):
 
 
 def test_pass_create_category(client):
-    pass
+    response = client.post(
+        '/restaurants/1/categories',
+        json={'name': 'Tastiest'},
+        headers=make_auth_header('restaurant'),
+    )
+    assert response.status_code == 201
 
 
 def test_fail_create_category(client):
-    pass
+    response = client.post(
+        '/restaurants/1/categories',
+        json={'name': 'Yummies'},
+        headers=make_auth_header('customer'),
+    )
+    assert response.status_code == 403
 
 
 def test_pass_update_category(client):
-    pass
+    with app.app_context():
+        latest_id = max(c.id for c in Category.query.all())
+        response = client.patch(
+            f'/categories/{latest_id}',
+            json={'name': 'Yummies'},
+            headers=make_auth_header('restaurant'),
+        )
+        assert response.status_code == 200
+        assert Category.query.get_or_404(latest_id).name == 'Yummies'
 
 
 def test_fail_update_category(client):
-    pass
+    with app.app_context():
+        latest_id = max(c.id for c in Category.query.all())
+        response = client.put(
+            f'/categories/{latest_id}',
+            json={'blame': 'Yummies'},
+            headers=make_auth_header('restaurant'),
+        )
+        assert response.status_code == 400
 
 
 def test_pass_delete_category(client):
-    pass
+    with app.app_context():
+        latest_id = max(c.id for c in Category.query.all())
+        response = client.delete(
+            f'/categories/{latest_id}',
+            headers=make_auth_header('restaurant'),
+        )
+        assert response.status_code == 200
 
 
 def test_fail_delete_category(client):
-    pass
+    with app.app_context():
+        latest_id = max(c.id for c in Category.query.all())
+        response = client.delete(
+            f'/categories/{latest_id}',
+            headers=make_auth_header('customer'),
+        )
+        assert response.status_code == 403
 
 
 ### ITEMS AND INGREDIENTS ###
 
 
 def test_pass_search_items(client):
-    pass
+    response = client.post('/items', json={'search_term': 'soup'})
+    assert response.status_code == 200
+    assert len(response.json) >= 1
 
 
 def test_fail_search_items(client):
-    pass
+    # Invalid request format
+    response = client.post('/items', data={'search_term': 'soup'})
+    assert response.status_code == 400
 
 
 def test_pass_get_item(client):
-    pass
+    response = client.get('/items/1')
+    assert response.status_code == 200
+    assert 'name' in response.json
+    assert 'price' in response.json
+
 
 
 def test_fail_get_item(client):
-    pass
+    # Singular resource in URL
+    response = client.get('/item/1')
+    assert response.status_code == 404
 
 
 def test_pass_create_item(client):
@@ -251,11 +299,16 @@ def test_fail_delete_item(client):
 
 
 def test_pass_get_items_by_ingredient(client):
-    pass
+    for ingredient_id in {1, 23, 57}:
+        response = client.get(f'/ingredients/{ingredient_id}/items')
+        assert response.status_code == 200
+        assert response.json
 
 
 def test_fail_get_items_by_ingredient(client):
-    pass
+    for ingredient_name in {'turmeric', 'saffron', 'pepper'}:
+        response = client.get(f'/ingredients/{ingredient_name}/items')
+        assert response.status_code == 404
 
 
 ### ORDERS ###
@@ -293,6 +346,7 @@ def test_pass_get_customer_orders(client):
     assert response.status_code == 200
     assert len(response.json) >= 3
 
+
 def test_fail_get_customer_orders(client):
     # Mix up resources in the URL
     response = client.get('/orders/1/customer', headers=make_auth_header('customer'))
@@ -300,12 +354,17 @@ def test_fail_get_customer_orders(client):
 
 
 def test_pass_get_restaurant_orders(client):
-    response = client.get('/restaurants/1/orders', headers=make_auth_header('restaurant'))
+    response = client.get(
+        '/restaurants/1/orders', headers=make_auth_header('restaurant')
+    )
     assert response.status_code == 200
     assert len(response.json) >= 1
     assert response.json[0]['customer_id'] == 1
 
+
 def test_fail_get_restaurant_orders(client):
     # Mix up resources in the URL
-    response = client.get('/orders/1/restaurant', headers=make_auth_header('restaurant'))
+    response = client.get(
+        '/orders/1/restaurant', headers=make_auth_header('restaurant')
+    )
     assert response.status_code == 404
