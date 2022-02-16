@@ -117,19 +117,19 @@ https://jalapino-api.herokuapp.com
 [`DELETE /customers/:id`](#delete-customersid) 
 
 // Categories  
-`POST /restaurant/:id/categories`  
-`PUT /categories/:id`  
-`PATCH /categories/:id`  
-`DELETE /categories/:id` 
+[`POST /restaurants/:id/categories`](#post-restaurantsidcategories)  
+[`PUT /categories/:id`](#put-categoriesid)  
+[`PATCH /categories/:id`](#patch-categoriesid)  
+[`DELETE /categories/:id`](#delete-categoriesid) 
 
 // Items & Ingredients  
-`GET /items/:id`  
-`GET /ingredients/:id/items`  
-`POST /items`  
-`POST /categories/:id/items`  
-`PUT /items/:id`  
-`PATCH /items/:id`  
-`DELETE /items/:id` 
+[`GET /items/:id`](#get-itemsid)   
+[`GET /ingredients/:id/items`](#get-ingredientsiditems)  
+[`POST /items`](#post-items)  
+[`POST /categories/:id/items`](#post-categoriesiditems)  
+[`PUT /items/:id`](#put-itemsid)  
+[`PATCH /items/:id`](#patch-itemsid)  
+[`DELETE /items/:id`](#delete-itemsid) 
 
 ---
 
@@ -428,6 +428,80 @@ curl -X DELETE 'https://jalapino-api.herokuapp.com/customers/1' -H "Content-Type
 ```
 [`Return to list of endpoints`](#list-of-all-endpoints)
 
+### POST /restaurants/:id/categories
+
+ℹ️ Create a new empty category under the parent restaurant resource  
+⚠️ Requires ownership of the parent restaurant resource
+
+Required data
+```jsonc
+"name"  
+```
+
+```bash
+# Sample request
+TOKEN=$RESTAURANT_TOKEN
+curl -X POST 'https://jalapino-api.herokuapp.com/restaurants/1/categories' -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -d '{"name": "Yummies"}'
+```
+```jsonc
+// Sample response
+201 CREATED
+{"id": 1}
+```
+[`Return to list of endpoints`](#list-of-all-endpoints)
+
+### PUT /categories/:id
+
+ℹ️ Update the entire representation of the category resource  
+⚠️ Requires ownership of the parent restaurant resource
+
+Required data
+```jsonc
+"name"  
+```
+
+```bash
+# Sample request
+TOKEN=$RESTAURANT_TOKEN
+curl -X PUT 'https://jalapino-api.herokuapp.com/categories/5' -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -d '{"name": "Tasties"}'
+```
+```jsonc
+// Sample response
+200 OK
+```
+[`Return to list of endpoints`](#list-of-all-endpoints)
+
+### PATCH /categories/:id
+
+ℹ️ Partially update the category resource  
+⚠️ Requires ownership of the parent restaurant resource
+
+```bash
+# Sample request
+TOKEN=$RESTAURANT_TOKEN
+curl -X PATCH 'https://jalapino-api.herokuapp.com/categories/5' -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -d '{"name": "Tastier Tasties"}'
+```
+```jsonc
+// Sample response
+200 OK
+```
+[`Return to list of endpoints`](#list-of-all-endpoints)
+
+### DELETE /categories/:id
+
+ℹ️ Delete category by id  
+⚠️ Requires ownership of the parent restaurant resource
+
+```bash
+# Sample request
+TOKEN=$RESTAURANT_TOKEN
+curl -X DELETE 'https://jalapino-api.herokuapp.com/categories/5' -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}"
+```
+```jsonc
+// Sample response
+200 OK
+```
+[`Return to list of endpoints`](#list-of-all-endpoints)
 
 ## Error handling
 
