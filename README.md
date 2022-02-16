@@ -18,8 +18,42 @@ https://jalapino-api.herokuapp.com
 
 #### ⚠️ Registration is currently closed.
 
-Test accounts are provided for each of the two distinct user **roles**  
-(Under each role listed are their scope aka permissions)  
+Test accounts are provided for each of the two distinct user **roles**.  
+
+<details>
+<summary><b>🔐 Reveal Credentials</b></summary>
+
+##### Test Customer #0 *($CUSTOMER_TOKEN)*
+```
+eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkJGV2Frc1dVRmlQRmpLd25fakotUSJ9.eyJpc3MiOiJodHRwczovL251bGxmYW1lLmV1LmF1dGgwLmNvbS8iLCJzdWIiOiJhdXRoMHw2MWY4NDkxNmJmMWRmOTAwNzEzN2QzNDciLCJhdWQiOiJqYWxhcGlubyIsImlhdCI6MTY0NDk2MDMzMiwiZXhwIjoxNjQ1MDQ2NzMyLCJhenAiOiJRdFkxVnBYdjhWbUlYUjRxSDVYNUVWYk9kMnoyU042NSIsInNjb3BlIjoiIiwicGVybWlzc2lvbnMiOlsiY3JlYXRlOmN1c3RvbWVyIiwiY3JlYXRlOm9yZGVyIiwiZGVsZXRlOmN1c3RvbWVyIiwicmVhZDpjdXN0b21lciIsInJlYWQ6b3JkZXIiLCJ1cGRhdGU6Y3VzdG9tZXIiXX0.ok225364i_xczyDOlJHoGrkBEqGs9AWHiydv0NYghaDruCbj3gE4tSl90Hj-rtjT3bofnhxaDvCd7w4dI45flJLtGORS51BwLEYeD99MmFE0UyIYZ_gDiihu3NTG-g0zf6EelzKLfQF0zrd21uFaTOkh7eo3z3cLAQBYzqXnZRjiF5iYnhaXRoKn9DaDLbXiFKgyZ0o5Bs1DxL2ZKJcbETQqhxSSmajUsHCAtkP3M0ik1PG0P_L6Hhu_bSp37BDxD-zWZgcm2CG79iy4634PtPC6QBCIcxuj-P4M3I9XVLxgdUS0Nwx1tpHJUM0pTo2Sw2RUWcwzPyuLpJH36kVDHg
+```
+##### Test Customer #1 *(Username & Password)*
+```
+jalapino.test+customer1@gmail.com
+Test+Customer123
+```
+##### Test Customer #2 *(Username & Password)*
+```
+jalapino.test+customer2@gmail.com
+Test+Customer123
+```
+##### Test Restaurant #0 *($RESTAURANT_TOKEN)*
+```
+eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkJGV2Frc1dVRmlQRmpLd25fakotUSJ9.eyJpc3MiOiJodHRwczovL251bGxmYW1lLmV1LmF1dGgwLmNvbS8iLCJzdWIiOiJhdXRoMHw2MWY4NDhkMTkwYjYwZjAwNzBmMmYyOTQiLCJhdWQiOiJqYWxhcGlubyIsImlhdCI6MTY0NDk2MDM5OSwiZXhwIjoxNjQ1MDQ2Nzk5LCJhenAiOiJRdFkxVnBYdjhWbUlYUjRxSDVYNUVWYk9kMnoyU042NSIsInNjb3BlIjoiIiwicGVybWlzc2lvbnMiOlsiY3JlYXRlOmNhdGVnb3J5IiwiY3JlYXRlOml0ZW0iLCJjcmVhdGU6cmVzdGF1cmFudCIsImRlbGV0ZTpjYXRlZ29yeSIsImRlbGV0ZTppdGVtIiwiZGVsZXRlOnJlc3RhdXJhbnQiLCJyZWFkOm9yZGVyIiwidXBkYXRlOmNhdGVnb3J5IiwidXBkYXRlOml0ZW0iLCJ1cGRhdGU6cmVzdGF1cmFudCJdfQ.thvmO0kpsuGmp-GGchzNHmC8MqRQWSOlazIPeUsRy_NpyB1YNQOAy4QtigEJHRxIkJ5WSBH-ivfbQ-gU08PZ5NLZOEUS_MPRM6RpYiC1e5m7Br0KZsySVQTouZAPv66iXhNrLg86RXtQ3-Ho_7_21FT5D8Rgs-6IiWgoLucNxQZWyxDNBccu05Mb6JN4kXlNpPWf9r4foV9JK59cBAJwsYhzJQNneUnozLgLSK9U0YOndQLQ1Jxr5KC6Kjnv1eSzpYbhXQN65uc-QzgvS5xqF8PbcTV8Us0N-IZPpH7IC10fcTY0YM2OIHvm852u2de-fV1Gqard8S_hNhU6-FhS0Q
+```
+##### Test Restaurant #1 *(Username & Password)*
+```
+jalapino.test+restaurant1@gmail.com
+Test+Restaurant123
+```
+##### Test Restaurant #2 *(Username & Password)*
+```
+jalapino.test+restaurant2@gmail.com
+Test+Restaurant123
+```
+
+</details>
+
 
 **customer** - _Jalapino customer placing delivery orders_  
 `create:customer`
@@ -60,39 +94,6 @@ $RESTAURANT_TOKEN
 ```
 https://jalapino-api.herokuapp.com
 ```
-<details>
-<summary><h3>🔐 Reveal Credentials</h3></summary>
-
-##### Test Customer #0 *($CUSTOMER_TOKEN)*
-```
-eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkJGV2Frc1dVRmlQRmpLd25fakotUSJ9.eyJpc3MiOiJodHRwczovL251bGxmYW1lLmV1LmF1dGgwLmNvbS8iLCJzdWIiOiJhdXRoMHw2MWY4NDkxNmJmMWRmOTAwNzEzN2QzNDciLCJhdWQiOiJqYWxhcGlubyIsImlhdCI6MTY0NDk2MDMzMiwiZXhwIjoxNjQ1MDQ2NzMyLCJhenAiOiJRdFkxVnBYdjhWbUlYUjRxSDVYNUVWYk9kMnoyU042NSIsInNjb3BlIjoiIiwicGVybWlzc2lvbnMiOlsiY3JlYXRlOmN1c3RvbWVyIiwiY3JlYXRlOm9yZGVyIiwiZGVsZXRlOmN1c3RvbWVyIiwicmVhZDpjdXN0b21lciIsInJlYWQ6b3JkZXIiLCJ1cGRhdGU6Y3VzdG9tZXIiXX0.ok225364i_xczyDOlJHoGrkBEqGs9AWHiydv0NYghaDruCbj3gE4tSl90Hj-rtjT3bofnhxaDvCd7w4dI45flJLtGORS51BwLEYeD99MmFE0UyIYZ_gDiihu3NTG-g0zf6EelzKLfQF0zrd21uFaTOkh7eo3z3cLAQBYzqXnZRjiF5iYnhaXRoKn9DaDLbXiFKgyZ0o5Bs1DxL2ZKJcbETQqhxSSmajUsHCAtkP3M0ik1PG0P_L6Hhu_bSp37BDxD-zWZgcm2CG79iy4634PtPC6QBCIcxuj-P4M3I9XVLxgdUS0Nwx1tpHJUM0pTo2Sw2RUWcwzPyuLpJH36kVDHg
-```
-##### Test Customer #1 *(Username & Password)*
-```
-jalapino.test+customer1@gmail.com
-Test+Customer123
-```
-##### Test Customer #2 *(Username & Password)*
-```
-jalapino.test+customer2@gmail.com
-Test+Customer123
-```
-##### Test Restaurant #0 *($RESTAURANT_TOKEN)*
-```
-eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkJGV2Frc1dVRmlQRmpLd25fakotUSJ9.eyJpc3MiOiJodHRwczovL251bGxmYW1lLmV1LmF1dGgwLmNvbS8iLCJzdWIiOiJhdXRoMHw2MWY4NDhkMTkwYjYwZjAwNzBmMmYyOTQiLCJhdWQiOiJqYWxhcGlubyIsImlhdCI6MTY0NDk2MDM5OSwiZXhwIjoxNjQ1MDQ2Nzk5LCJhenAiOiJRdFkxVnBYdjhWbUlYUjRxSDVYNUVWYk9kMnoyU042NSIsInNjb3BlIjoiIiwicGVybWlzc2lvbnMiOlsiY3JlYXRlOmNhdGVnb3J5IiwiY3JlYXRlOml0ZW0iLCJjcmVhdGU6cmVzdGF1cmFudCIsImRlbGV0ZTpjYXRlZ29yeSIsImRlbGV0ZTppdGVtIiwiZGVsZXRlOnJlc3RhdXJhbnQiLCJyZWFkOm9yZGVyIiwidXBkYXRlOmNhdGVnb3J5IiwidXBkYXRlOml0ZW0iLCJ1cGRhdGU6cmVzdGF1cmFudCJdfQ.thvmO0kpsuGmp-GGchzNHmC8MqRQWSOlazIPeUsRy_NpyB1YNQOAy4QtigEJHRxIkJ5WSBH-ivfbQ-gU08PZ5NLZOEUS_MPRM6RpYiC1e5m7Br0KZsySVQTouZAPv66iXhNrLg86RXtQ3-Ho_7_21FT5D8Rgs-6IiWgoLucNxQZWyxDNBccu05Mb6JN4kXlNpPWf9r4foV9JK59cBAJwsYhzJQNneUnozLgLSK9U0YOndQLQ1Jxr5KC6Kjnv1eSzpYbhXQN65uc-QzgvS5xqF8PbcTV8Us0N-IZPpH7IC10fcTY0YM2OIHvm852u2de-fV1Gqard8S_hNhU6-FhS0Q
-```
-##### Test Restaurant #1 *(Username & Password)*
-```
-jalapino.test+restaurant1@gmail.com
-Test+Restaurant123
-```
-##### Test Restaurant #2 *(Username & Password)*
-```
-jalapino.test+restaurant2@gmail.com
-Test+Restaurant123
-```
-
-</details>
 
 ---
 
@@ -137,8 +138,6 @@ Test+Restaurant123
 *All endpoints include sample request & response examples*
 
 ### GET /info
-
-ℹ️ Returns all quiz categories in the specified format.
 
 ```bash
 # Sample request
