@@ -5,13 +5,23 @@
 This API documentation aims to be a comprehensive aid in using the Jalapino API endpoints. The API follows RESTful design principles & best practices, e.g. nouns as resource identifiers as well as accepting and returning data in JSON format.
 
 
-Base URL:
+// Base URL
 ```
 https://jalapino-api.herokuapp.com
 ```
 
+## Authentication
+
+Test accounts are provided for each of the two distinct user roles: 
+* customer
+* restaurant
+
+... contiue here
 
 ## List of all endpoints
+
+<details>
+<summary>Expand list</summary>
 
 // API Info  
 `GET /info`  
@@ -19,14 +29,33 @@ https://jalapino-api.herokuapp.com
 // Restaurants  
 `GET /restaurants`  
 `GET /restaurant/:id`  
-`PUT /restaurant/:id`  
 `POST /restaurants`  
+`PUT /restaurant/:id`  
 `PATCH /restaurant/:id`  
+`DELETE /restaurant/:id`
 
-`GET /categories/:id/questions`  
-`POST /questions`  
-`POST /quiz`  
-`DELETE /questions/:id`  
+// Customers  
+`GET /customers/:id`  
+`POST /customers`  
+`PATCH /customers/:id`  
+`DELETE /customers/:id` 
+
+// Categories
+`POST /restaurant/:id/categories`  
+`PUT /categories/:id`  
+`PATCH /categories/:id`  
+`DELETE /categories/:id` 
+
+// Items & Ingredients  
+`GET /items/:id`  
+`GET /ingredients/:id/items`  
+`POST /items (search)`  
+`POST /categories/:id/items (create)`  
+`PUT /items/:id`  
+`PATCH /items/:id`  
+`DELETE /items/:id` 
+
+</details>
 
 ## Endpoints in detail
 
