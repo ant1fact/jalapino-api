@@ -61,12 +61,11 @@ class CRUDModel(Model):
         return {
             col.name: _get_column_default_value(col)
             for col in mapper.columns
-            if col.name not in PROTECTED_COLUMN_NAMES
-            and not col.foreign_keys
+            if col.name not in PROTECTED_COLUMN_NAMES and not col.foreign_keys
         }
 
 
-db = SQLAlchemy(model_class=CRUDModel)
+db = SQLAlchemy(model_class=CRUDModel, session_options={'autoflush': False})
 
 
 class Restaurant(db.Model):
@@ -221,7 +220,7 @@ class Order(db.Model):
     def serialize(self):
         return {
             'id': self.id,
-            'customer': Customer.query.get_or_404(self.customer_id).serialize(),
-            'restaurant': Restaurant.query.get_or_404(self.restaurant_id).serialize(),
+            'customer_id': self.customer_id,
+            'restaurant_id': self.restaurant_id,
             'items': [item.serialize() for item in self.items],
         }

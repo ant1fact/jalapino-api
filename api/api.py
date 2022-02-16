@@ -1,4 +1,5 @@
 import json
+from os import getenv
 
 from flask import (
     Blueprint,
@@ -7,11 +8,9 @@ from flask import (
     jsonify,
     redirect,
     render_template,
-    request
+    request,
 )
 from werkzeug.exceptions import HTTPException
-from os import getenv
-
 
 from .auth import AuthError, requires_auth
 
@@ -33,6 +32,13 @@ def _verify_ownership(Model, id: int, auth0_id: str):
     return resource
 
 
+def _get_json_or_abort():
+    req_json = request.get_json()
+    if req_json is None:
+        abort(400, 'Invalid JSON representation or no data found.')
+    return req_json
+
+
 def _prepare_request_data(Model):
     '''Central logic for preparing data coming from POST, PUT and PATCH requests.'''
     if request.method not in {'POST', 'PUT', 'PATCH'}:
@@ -45,7 +51,8 @@ def _prepare_request_data(Model):
         # Server fills in missing data with defaults, except where column.nullable=False
         # in which case the data must come from the client.
         # Raise 400 (Bad Request) if any data in the final representation is None.
-        data = {**Model.defaults(), **request.get_json()}
+        req_json = _get_json_or_abort()
+        data = {**Model.defaults(), **req_json}
         if None in data.values():
             missing_data = [k for k in data if data[k] is None]
             abort(
@@ -70,7 +77,11 @@ def _prepare_request_data(Model):
         # Requires: Some data
         # Raise 400 (Bad Request) if the final representation contains no data.
         # i.e. none of the incoming key:value pairs were valid and got filtered out
-        data = {k: v for k, v in request.get_json().items() if k in Model.defaults()}
+        data = {
+            k: v
+            for k, v in request.get_json().items()
+            if k in Model.defaults() and v is not None
+        }
         if not data:
             abort(
                 400,
@@ -357,6 +368,8 @@ def get_items_by_ingredient(id: int):
 
 ### ORDERS ###
 
+def _get_item_restaurant_id(item: Item) -> int:
+    return Category.query.get_or_404(item.category_id).restaurant_id
 
 def _assert_same_restaurant(items: list) -> bool:
     '''Check if all Item objects in the list are coming from the same restaurant.'''
@@ -364,8 +377,8 @@ def _assert_same_restaurant(items: list) -> bool:
     if not items or not all(isinstance(item, Item) for item in items):
         return False
     # Take first item's restaurant_id and compare the rest to that
-    restaurant_id = items.pop(0).restaurant_id
-    if any(item.restaurant_id != restaurant_id for item in items):
+    restaurant_id = _get_item_restaurant_id(items.pop(0))
+    if any(_get_item_restaurant_id(item) != restaurant_id for item in items):
         return False
     return True
 
@@ -394,12 +407,12 @@ def create_order(payload: dict, id: int):
     '''Create new order, taking customer_id, restaurant_id and a list of items as item ids.'''
     _verify_ownership(Customer, id, auth0_id=payload['sub'])
     data = _prepare_request_data(Order)
-    data.customer_id = id
+    data['customer_id'] = id
     new_order = Order()
     if not data.get('items', []):
         abort(400, 'No item ids have been specified.')
     new_order.items = _bulk_fetch_items(data.pop('items'))
-    new_order.restaurant_id = new_order.items[0].restaurant_id
+    new_order.restaurant_id = _get_item_restaurant_id(new_order.items[0])
     new_order.update(data)
     return {'id': new_order.save()}, 201
 

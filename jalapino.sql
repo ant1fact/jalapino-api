@@ -331,9 +331,9 @@ Drinks	3	12
 --
 
 COPY public.customers (auth0_id, address, name, phone, id, email) FROM stdin;
-auth0|61f84916bf1df9007137d347	99 Some St., Town, State	TEST	1-234-5678910	3	test@test.com
-auth0|61f84916bf1df9007137d347	99 Some St., Town, State	TEST2	1-234-5678910	5	test2@test.com
-auth0|61f84916bf1df9007137d347	99 Some St., Town, State	TEST3	1-234-5678910	6	test3@test.com
+auth0|61f84916bf1df9007137d347	99 Some St., Town, State	TEST	1-234-5678910	1	test@test.com
+auth0|61f84916bf1df9007137d347	99 Some St., Town, State	TEST2	1-234-5678910	2	test2@test.com
+auth0|61f84916bf1df9007137d347	99 Some St., Town, State	TEST3	1-234-5678910	3	test3@test.com
 \.
 
 
