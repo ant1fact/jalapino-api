@@ -790,11 +790,10 @@ curl -X GET 'https://jalapino-api.herokuapp.com/restaurants/1/orders' -H "Conten
 }
 ```
 
-## Contributing to the Jalapino API
+## Testing & Local Setup
 
 All of the backend code is formatted using [Black](https://github.com/psf/black). Imports are sorted using the `Python Refactor: Sort Imports` command available as part of the Python extension for VSCode.
 
-ℹ️ To run the backend locally
 ```bash
 # Set up the environment
 python -m venv .venv
@@ -815,7 +814,7 @@ python -m pytest
 flask run
 ```
 
-### Dependencies
+#### Dependencies
 
 `Python 3.8.10`  
 ```
@@ -833,11 +832,11 @@ pytest==7.0.1
 
 ## Authors
 
-David Pacsuta
++ David Pacsuta
 
 ## Acknowledgements
 
-The Fullstack Nanodegree teaching staff, as well as mentors and reviewers at Udacity  
-All the helpful people at knowledge.udacity.com and stackoverflow.com  
-Maintainers of the Flask documentation  
-Miguel Grinberg
++ The Fullstack Nanodegree teaching staff, as well as mentors and reviewers at Udacity  
++ All the helpful people at knowledge.udacity.com and stackoverflow.com  
++ Maintainers of the Flask documentation  
++ Miguel Grinberg
