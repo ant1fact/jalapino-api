@@ -257,12 +257,9 @@ curl -X GET 'https://jalapino-api.herokuapp.com/restaurants/1'
 
 ```bash
 # Sample request
-curl -X POST 'https://jalapino-api.herokuapp.com/restaurants' \
--H "Content-Type: application/json" \
--H "Authorization: Bearer ${TOKEN}" \
--d '{"name": "TEST_RESTAURANT", "email": "test-restaurant@test.com", "phone": "1-234-567890", "address": "111 Testreet, Testown"}'
+curl -X POST 'https://jalapino-api.herokuapp.com/restaurants' -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -d '{"name": "TEST_RESTAURANT", "email": "test-restaurant@test.com", "phone": "1-234-567890", "address": "111 Testreet, Testown"}'
 ```
-```json
+```jsonc
 // Sample response
 {"id": <id>}
 ```
