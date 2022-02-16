@@ -1,6 +1,8 @@
 # 🌶️ Jalapiño  API Reference
 
-_Welcome to Jalapiño, a platform created to enable restaurants and customers to come together for a feast of foods in a delivery bonanza._
+_Welcome to Jalapiño, a platform created to enable restaurants and customers to come together for a feast of foods in a delivery bonanza._  
+
+_Much like a normal menu, restaurants can create different categories of items to sell that the customers can purchase by submitting an order._
 
 ## Intro
 
@@ -130,6 +132,11 @@ https://jalapino-api.herokuapp.com
 [`PUT /items/:id`](#put-itemsid)  
 [`PATCH /items/:id`](#patch-itemsid)  
 [`DELETE /items/:id`](#delete-itemsid) 
+
+// Orders  
+[`POST /customers/:id/orders`](#post-customersidorders)  
+[`GET /customers/:id/orders`](#get-customersidorders)  
+[`GET /restaurants/:id/orders`](#get-restaurantsidorders)  
 
 ---
 
@@ -654,7 +661,7 @@ curl -X POST 'https://jalapino-api.herokuapp.com/categories/1/items' -H "Content
 ℹ️ Update the entire representation of the item resource  
 ⚠️ Requires ownership of the grandparent restaurant resource
 
-Required data
+Required
 ```jsonc
 "name"
 "description"
@@ -698,6 +705,62 @@ curl -X PATCH 'https://jalapino-api.herokuapp.com/items/8' -H "Content-Type: app
 # Sample request
 TOKEN=$RESTAURANT_TOKEN
 curl -X DELETE 'https://jalapino-api.herokuapp.com/items/8' -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}"
+```
+```jsonc
+// Sample response
+200 OK
+```
+[`Return to list of endpoints`](#list-of-all-endpoints)
+
+### POST /customers/:id/orders
+
+ℹ️ Submits a new order with the specified item ids  
+⚠️ All items must come from the same restaurant  
+⚠️ Requires ownership of the customer resource
+
+Required
+```jsonc
+// list of item ids
+"items": []
+```
+
+```bash
+# Sample request
+TOKEN=$CUSTOMER_TOKEN
+curl -X POST 'https://jalapino-api.herokuapp.com/customers/1/orders' -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -d '{"items": [1, 2, 3, 4]}'
+```
+```jsonc
+// Sample response
+201 CREATED
+{"id": 1}
+```
+[`Return to list of endpoints`](#list-of-all-endpoints)
+
+### GET /customers/:id/orders
+
+ℹ️ Get a list of past orders for the parent customer resource  
+⚠️ Requires ownership of the customer resource  
+
+```bash
+# Sample request
+TOKEN=$CUSTOMER_TOKEN
+curl -X GET 'https://jalapino-api.herokuapp.com/customers/1/orders' -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}"
+```
+```jsonc
+// Sample response
+200 OK
+```
+[`Return to list of endpoints`](#list-of-all-endpoints)
+
+### GET /restaurants/:id/orders
+
+ℹ️ Get a list of past orders for the parent restaurant resource  
+⚠️ Requires ownership of the restaurant resource  
+
+```bash
+# Sample request
+TOKEN=$RESTAURANT_TOKEN
+curl -X GET 'https://jalapino-api.herokuapp.com/restaurants/1/orders' -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}"
 ```
 ```jsonc
 // Sample response
