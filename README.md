@@ -2,7 +2,8 @@
 
 ## Intro
 
-This API documentation aims to be a comprehensive aid in using the Jalapino API endpoints. The API follows RESTful design principles & best practices, e.g. nouns as resource identifiers as well as accepting and returning data in JSON format.
+This documentation aims to be a comprehensive aid in using the Jalapino API endpoints.  
+The API follows RESTful design principles & best practices, e.g. nouns as resource identifiers as well as accepting and returning data in JSON format.
 
 
 // Base URL
@@ -10,13 +11,40 @@ This API documentation aims to be a comprehensive aid in using the Jalapino API 
 https://jalapino-api.herokuapp.com
 ```
 
+---
+
 ## Authentication
 
-Test accounts are provided for each of the two distinct user roles: 
-* customer
-* restaurant
+Registration is currently closed.
 
-... contiue here
+Test accounts are provided for each of the two distinct user **roles**  
+(Under each role listed are their scope aka permissions): 
+* **customer** - _Jalapino customer placing delivery orders_  
+`
+create:customer
+read:customer
+update:customer
+delete:customer
+create:order
+read:order
+`
+* **restaurant** - _Restaurant offering foods and drinks to Jalapino customers_  
+`
+create:restaurant
+update:restaurant
+delete:restaurant
+create:category
+update:category
+delete:category
+create:item
+update:item
+delete:item
+read:order
+`
+
+... continue here
+
+---
 
 ## List of all endpoints
 
@@ -57,76 +85,112 @@ Test accounts are provided for each of the two distinct user roles:
 
 </details>
 
+---
+
 ## Endpoints in detail
 
 *All endpoints include sample request & response examples*
 
----
-
-#### GET /categories
+### GET /info
 
 ℹ️ Returns all quiz categories in the specified format.
 
 ```bash
 # Sample request
-curl -X GET 'localhost:5000/categories'
+curl -X GET 'https://jalapino-api.herokuapp.com/info'
 ```
 ```javascript
 // Sample response
 {
-  "categories": {
-    "1": "Science", 
-    "2": "Art", 
-    "3": "Geography", 
-    "4": "History", 
-    "5": "Entertainment", 
-    "6": "Sports"
-  }
+  "contact": {
+    "email": "jalapino.test@gmail.com",
+    "name": "David Pacsuta",
+    "url": "https://github.com/ant1fact/jalapino"
+  },
+  "description": "Simplified food delivery platform where restaurants can post their items and customers can place orders.",
+  "license": {
+    "name": "MIT",
+    "url": "https://spdx.org/licenses/MIT.html"
+  },
+  "title": "Jalapino - Final project for Udacity Fullstack Nanodegree",
+  "version": 0.1
 }
 ```
 
 ---
 
-#### GET /questions
+### GET /restaurants
 
-ℹ️ Returns all questions unfiltered & paginated, in the specified format. The number of returned items per page is set to 10.<br>
-⚠️ If the ?page query parameter is beyond the number of available pages, an empty list of questions is returned.
+ℹ️ Return a list of all restaurants paginated. The default number of items per page is 10.<br>
+⚠️ If the ?page query parameter is beyond the number of available pages, a 404 error will be returned.
 
 ```bash
 # Sample request
-curl -X GET 'localhost:5000/questions?page=1'
+curl -X GET 'https://jalapino-api.herokuapp.com/restaurants?page=1'
 ```
-```javascript
+```jsonc
 // Sample response
-{
-    "categories": {
-      "1": "Science", 
-      "2": "Art", 
-      "3": "Geography", 
-      "4": "History", 
-      "5": "Entertainment", 
-      "6": "Sports"
-    }, 
-    "current_category": null, 
-    "questions": [
+[
+  {
+    "address": "8601 Lindbergh Blvd, 19153 Philadelphia, Pennsylvania",
+    "categories": [
       {
-        "answer": "Uruguay", 
-        "category": 6, 
-        "difficulty": 4, 
-        "id": 11, 
-        "question": "Which country won the first ever soccer World Cup in 1930?"
+        "id": 1,
+        "items": [
+          {
+            "description": "A dip made from black cardamom and yellow pepper.",
+            "id": 1,
+            "ingredients": [
+              { "id": 71, "name": "creme fraiche" },
+              { "id": 141, "name": "cardamom" },
+              { "id": 73, "name": "pepper" }
+            ],
+            "name": "Cardamom and pepper dip",
+            "price": "1.49"
+          },
+          {
+            // more items ...
+          }
+          {
+            "description": "Toasted seaweed wrapped around sushi rice, filled with sweet pepper and freshly-caught salmon.",
+            "id": 8,
+            "ingredients": [
+              { "id": 1, "name": "rice" },
+              { "id": 134, "name": "rice vinegar" },
+              { "id": 73, "name": "pepper" },
+              { "id": 55, "name": "salmon" }
+            ],
+            "name": "Pepper and salmon maki",
+            "price": "4.99"
+          }
+        ],
+        "name": "Appetizers"
       },
-      // 8 questions removed for brevity in this preview
       {
-        "answer": "George Washington Carver", 
-        "category": 4, 
-        "difficulty": 2, 
-        "id": 12, 
-        "question": "Who invented Peanut Butter?"
+        // category #2 ...
       },
-    ], 
-    "total_questions": 20
+      {
+        // category #3 ...
+      },
+      // An empty category
+      { "id": 4, "items": [], "name": "Drinks" }
+    ],
+    "description": "It's not all sunshine and BBQ!",
+    "email": "hello@nn-bbq.com",
+    "id": 1,
+    "logo_uri": "https://raw.githubusercontent.com/ant1fact/jalapino/main/static/images/food-g9be06d40f_640.jpg",
+    "name": "Not Necessarily BBQ",
+    "orders": [],
+    "phone": "+1 202-918-2132",
+    "website": "www.nn-bbq.com"
+  },
+  {
+    // restaurant #2 ...
+  },
+  {
+    // restaurant #3 ...
   }
+]
 ```
 
 ---
