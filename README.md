@@ -241,7 +241,7 @@ curl -X GET 'https://jalapino-api.herokuapp.com/restaurants?page=1'
 
 ### GET /restaurants/:id
 
-ℹ️ Returns the requested restaurant object by its id or 404 if it is not found
+ℹ️ Returns the requested restaurant object by its id
 
 ```bash
 # Sample request
@@ -496,6 +496,208 @@ curl -X PATCH 'https://jalapino-api.herokuapp.com/categories/5' -H "Content-Type
 # Sample request
 TOKEN=$RESTAURANT_TOKEN
 curl -X DELETE 'https://jalapino-api.herokuapp.com/categories/5' -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}"
+```
+```jsonc
+// Sample response
+200 OK
+```
+[`Return to list of endpoints`](#list-of-all-endpoints)
+
+### GET /items/:id
+
+ℹ️ Returns the requested item object by its id
+
+```bash
+# Sample request
+curl -X GET 'https://jalapino-api.herokuapp.com/items/10'
+```
+```jsonc
+// Sample response
+200 OK
+{
+  "description": "Butterbean and ale stewed.",
+  "id": 10,
+  "ingredients": [
+    { "id": 21, "name": "butterbean" },
+    { "id": 41, "name": "black pepper" },
+    { "id": 51, "name": "onion" },
+    { "id": 116, "name": "potatoes" },
+    { "id": 126, "name": "ale" }
+  ],
+  "name": "Butterbean and ale stew",
+  "price": "9.36"
+}
+```
+[`Return to list of endpoints`](#list-of-all-endpoints)
+
+### GET /ingredients/:id/items
+
+ℹ️ Returns a list of items containing the parent ingredient id
+
+```bash
+# Sample request
+curl -X GET 'https://jalapino-api.herokuapp.com/ingredients/25/items'
+```
+```jsonc
+// Sample response
+200 OK
+[
+  {
+    "description": "Crispy crepes filled with baby sweetcorn and creamy buttermilk.",
+    "id": 33,
+    "ingredients": [
+      { "id": 25, "name": "milk" },
+      { "id": 32, "name": "butter" },
+      { "id": 56, "name": "buttermilk" },
+      { "id": 82, "name": "egg" },
+      { "id": 104, "name": "sweetcorn" },
+      { "id": 128, "name": "flour" }
+    ],
+    "name": "Sweetcorn and buttermilk crepes",
+    "price": "8.46"
+  },
+  {
+    // Removed some items in the middle for brevity
+  },
+  {
+    "description": "Fluffy pancake filled with fresh blackcurrant and smoked cheese.",
+    "id": 87,
+    "ingredients": [
+      { "id": 25, "name": "milk" },
+      { "id": 32, "name": "butter" },
+      { "id": 80, "name": "blackcurrant" },
+      { "id": 82, "name": "egg" },
+      { "id": 122, "name": "cheese" },
+      { "id": 128, "name": "flour" }
+    ],
+    "name": "Blackcurrant and cheese pancake",
+    "price": "8.28"
+  }
+]
+```
+[`Return to list of endpoints`](#list-of-all-endpoints)
+
+### POST /items
+
+ℹ️ Search items by their name. Supports partial matching
+
+Required data
+```jsonc
+"search_term"   
+```
+
+```bash
+# Sample request
+curl -X POST 'https://jalapino-api.herokuapp.com/items' -H "Content-Type: application/json" -d '{"search_term": "soup"}'
+```
+```jsonc
+// Sample response
+200 OK
+[
+  {
+    "description": "Tofu and baby sweetcorn combined into smooth soup.",
+    "id": 5,
+    "ingredients": [
+      { "id": 45, "name": "garlic" },
+      { "id": 54, "name": "tofu" },
+      { "id": 104, "name": "sweetcorn" }
+    ],
+    "name": "Tofu and sweetcorn soup",
+    "price": "3.49"
+  },
+  {
+    // Removed some items in the middle for brevity
+  },
+  {
+    "description": "Fresh leek and natural yoghurt combined into creamy soup.",
+    "id": 64,
+    "ingredients": [
+      { "id": 45, "name": "garlic" },
+      { "id": 16, "name": "leek" },
+      { "id": 120, "name": "yoghurt" },
+      { "id": 138, "name": "cream" }
+    ],
+    "name": "Leek and yoghurt soup",
+    "price": "5.04"
+  }
+]
+```
+[`Return to list of endpoints`](#list-of-all-endpoints)
+
+### POST /categories/:id/items
+
+ℹ️ Create a new item under the parent category resource  
+⚠️ Requires ownership of the grandparent restaurant resource
+
+Required
+```jsonc
+"name"
+"description"
+"ingredients"
+"price"
+```
+
+```bash
+# Sample request
+TOKEN=$RESTAURANT_TOKEN
+curl -X POST 'https://jalapino-api.herokuapp.com/categories/1/items' -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -d '{"name": "Bullseye", "description": "Not what it sounds.", "price": 24.42, "ingredients": ["bull", "duh", "saffron", "turmeric"]}'
+```
+```jsonc
+// Sample response
+201 CREATED
+{"id": 8}
+```
+[`Return to list of endpoints`](#list-of-all-endpoints)
+
+### PUT /items/:id
+
+ℹ️ Update the entire representation of the item resource  
+⚠️ Requires ownership of the grandparent restaurant resource
+
+Required data
+```jsonc
+"name"
+"description"
+"ingredients"
+"price" 
+```
+
+```bash
+# Sample request
+TOKEN=$RESTAURANT_TOKEN
+curl -X PUT 'https://jalapino-api.herokuapp.com/items/8' -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -d '{"name": "Catseye", "description": "It was a bull, now it is a cat.", "price": 42.24, "ingredients": ["cat", "nip", "saffron", "turmeric"]}'
+```
+```jsonc
+// Sample response
+200 OK
+```
+[`Return to list of endpoints`](#list-of-all-endpoints)
+
+### PATCH /items/:id
+
+ℹ️ Partially update the item resource  
+⚠️ Requires ownership of the grandparent restaurant resource
+
+```bash
+# Sample request
+TOKEN=$RESTAURANT_TOKEN
+curl -X PATCH 'https://jalapino-api.herokuapp.com/items/8' -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -d '{"name": "Tastier Tasties"}'
+```
+```jsonc
+// Sample response
+200 OK
+```
+[`Return to list of endpoints`](#list-of-all-endpoints)
+
+### DELETE /items/:id
+
+ℹ️ Delete item by id  
+⚠️ Requires ownership of the grandparent restaurant resource
+
+```bash
+# Sample request
+TOKEN=$RESTAURANT_TOKEN
+curl -X DELETE 'https://jalapino-api.herokuapp.com/items/8' -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}"
 ```
 ```jsonc
 // Sample response
