@@ -15,41 +15,73 @@ https://jalapino-api.herokuapp.com
 
 ## Authentication
 
-Registration is currently closed.
+⚠️ Registration is currently closed.
 
 Test accounts are provided for each of the two distinct user **roles**  
-(Under each role listed are their scope aka permissions): 
-* **customer** - _Jalapino customer placing delivery orders_  
-`
-create:customer
-read:customer
-update:customer
-delete:customer
-create:order
-read:order
-`
-* **restaurant** - _Restaurant offering foods and drinks to Jalapino customers_  
-`
-create:restaurant
-update:restaurant
-delete:restaurant
-create:category
-update:category
-delete:category
-create:item
-update:item
-delete:item
-read:order
-`
+(Under each role listed are their scope aka permissions)  
 
-... continue here
+**customer** - _Jalapino customer placing delivery orders_  
+`create:customer`
+`read:customer`
+`update:customer`
+`delete:customer`
+`create:order`
+`read:order`  
+
+**restaurant** - _Restaurant offering foods and drinks to Jalapino customers_  
+`create:restaurant`
+`update:restaurant`
+`delete:restaurant`
+`create:category`
+`update:category`
+`delete:category`
+`create:item`
+`update:item`
+`delete:item`
+`read:order`
+
+ℹ️ There are two ways to authenticate:  
+1) Use the provided JWTs directly
+2) Login with the credentials using the login prompt on the main page. Upon successful login the user will be redirected to a page that displays the newly generated JWT for the account.
+
+⚠️ Make sure to generate a new token if the existing one(s) don't work. In case of running the tests with pytest, the new token must be updated in config.py
+
+```
+https://jalapino-api.herokuapp.com
+```
+
+##### Test Customer #0 *(JWT as in config.py)*
+```
+eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkJGV2Frc1dVRmlQRmpLd25fakotUSJ9.eyJpc3MiOiJodHRwczovL251bGxmYW1lLmV1LmF1dGgwLmNvbS8iLCJzdWIiOiJhdXRoMHw2MWY4NDkxNmJmMWRmOTAwNzEzN2QzNDciLCJhdWQiOiJqYWxhcGlubyIsImlhdCI6MTY0NDk2MDMzMiwiZXhwIjoxNjQ1MDQ2NzMyLCJhenAiOiJRdFkxVnBYdjhWbUlYUjRxSDVYNUVWYk9kMnoyU042NSIsInNjb3BlIjoiIiwicGVybWlzc2lvbnMiOlsiY3JlYXRlOmN1c3RvbWVyIiwiY3JlYXRlOm9yZGVyIiwiZGVsZXRlOmN1c3RvbWVyIiwicmVhZDpjdXN0b21lciIsInJlYWQ6b3JkZXIiLCJ1cGRhdGU6Y3VzdG9tZXIiXX0.ok225364i_xczyDOlJHoGrkBEqGs9AWHiydv0NYghaDruCbj3gE4tSl90Hj-rtjT3bofnhxaDvCd7w4dI45flJLtGORS51BwLEYeD99MmFE0UyIYZ_gDiihu3NTG-g0zf6EelzKLfQF0zrd21uFaTOkh7eo3z3cLAQBYzqXnZRjiF5iYnhaXRoKn9DaDLbXiFKgyZ0o5Bs1DxL2ZKJcbETQqhxSSmajUsHCAtkP3M0ik1PG0P_L6Hhu_bSp37BDxD-zWZgcm2CG79iy4634PtPC6QBCIcxuj-P4M3I9XVLxgdUS0Nwx1tpHJUM0pTo2Sw2RUWcwzPyuLpJH36kVDHg
+```
+##### Test Customer #1 *(Username & Password)*
+```
+jalapino.test+customer1@gmail.com
+Test+Customer123
+```
+##### Test Customer #2 *(Username & Password)*
+```
+jalapino.test+customer2@gmail.com
+Test+Customer123
+```
+##### Test Restaurant #0 *(JWT as in config.py)*
+```
+eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkJGV2Frc1dVRmlQRmpLd25fakotUSJ9.eyJpc3MiOiJodHRwczovL251bGxmYW1lLmV1LmF1dGgwLmNvbS8iLCJzdWIiOiJhdXRoMHw2MWY4NDhkMTkwYjYwZjAwNzBmMmYyOTQiLCJhdWQiOiJqYWxhcGlubyIsImlhdCI6MTY0NDk2MDM5OSwiZXhwIjoxNjQ1MDQ2Nzk5LCJhenAiOiJRdFkxVnBYdjhWbUlYUjRxSDVYNUVWYk9kMnoyU042NSIsInNjb3BlIjoiIiwicGVybWlzc2lvbnMiOlsiY3JlYXRlOmNhdGVnb3J5IiwiY3JlYXRlOml0ZW0iLCJjcmVhdGU6cmVzdGF1cmFudCIsImRlbGV0ZTpjYXRlZ29yeSIsImRlbGV0ZTppdGVtIiwiZGVsZXRlOnJlc3RhdXJhbnQiLCJyZWFkOm9yZGVyIiwidXBkYXRlOmNhdGVnb3J5IiwidXBkYXRlOml0ZW0iLCJ1cGRhdGU6cmVzdGF1cmFudCJdfQ.thvmO0kpsuGmp-GGchzNHmC8MqRQWSOlazIPeUsRy_NpyB1YNQOAy4QtigEJHRxIkJ5WSBH-ivfbQ-gU08PZ5NLZOEUS_MPRM6RpYiC1e5m7Br0KZsySVQTouZAPv66iXhNrLg86RXtQ3-Ho_7_21FT5D8Rgs-6IiWgoLucNxQZWyxDNBccu05Mb6JN4kXlNpPWf9r4foV9JK59cBAJwsYhzJQNneUnozLgLSK9U0YOndQLQ1Jxr5KC6Kjnv1eSzpYbhXQN65uc-QzgvS5xqF8PbcTV8Us0N-IZPpH7IC10fcTY0YM2OIHvm852u2de-fV1Gqard8S_hNhU6-FhS0Q
+```
+##### Test Restaurant #1 *(Username & Password)*
+```
+jalapino.test+restaurant1@gmail.com
+Test+Restaurant123
+```
+##### Test Restaurant #2 *(Username & Password)*
+```
+jalapino.test+restaurant2@gmail.com
+Test+Restaurant123
+```
 
 ---
 
 ## List of all endpoints
-
-<details>
-<summary>Expand list</summary>
 
 // API Info  
 `GET /info`  
@@ -68,7 +100,7 @@ read:order
 `PATCH /customers/:id`  
 `DELETE /customers/:id` 
 
-// Categories
+// Categories  
 `POST /restaurant/:id/categories`  
 `PUT /categories/:id`  
 `PATCH /categories/:id`  
@@ -77,13 +109,11 @@ read:order
 // Items & Ingredients  
 `GET /items/:id`  
 `GET /ingredients/:id/items`  
-`POST /items (search)`  
-`POST /categories/:id/items (create)`  
+`POST /items`  
+`POST /categories/:id/items`  
 `PUT /items/:id`  
 `PATCH /items/:id`  
 `DELETE /items/:id` 
-
-</details>
 
 ---
 
