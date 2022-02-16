@@ -13,8 +13,16 @@ https://jalapino-api.herokuapp.com
 
 ## List of all endpoints
 
-`GET /categories`  
-`GET /questions`  
+// API Info  
+`GET /info`  
+
+// Restaurants  
+`GET /restaurants`  
+`GET /restaurant/:id`  
+`PUT /restaurant/:id`  
+`POST /restaurants`  
+`PATCH /restaurant/:id`  
+
 `GET /categories/:id/questions`  
 `POST /questions`  
 `POST /quiz`  
@@ -250,11 +258,10 @@ curl -X DELETE 'localhost:5000/questions/1'
 ℹ️ Auth errors are in the format provided by auth0
 
 ```javascript
-// Sample error
+// Sample error 401
 {
-  "code": 405,
-  "description": "The method is not allowed for the requested URL.",
-  "name": "Method Not Allowed"
+    "code": "authorization_header_missing",
+    "description": "Authorization header is expected"
 }
 ```
 
