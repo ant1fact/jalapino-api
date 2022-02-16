@@ -129,7 +129,7 @@ Test+Restaurant123
 # Sample request
 curl -X GET 'https://jalapino-api.herokuapp.com/info'
 ```
-```javascript
+```json
 // Sample response
 {
   "contact": {
@@ -151,14 +151,14 @@ curl -X GET 'https://jalapino-api.herokuapp.com/info'
 
 ### GET /restaurants
 
-ℹ️ Return a list of all restaurants paginated. The default number of items per page is 10.<br>
+ℹ️ Return a list of all restaurant objects paginated. The default number of items per page is 10.<br>
 ⚠️ If the ?page query parameter is beyond the number of available pages, a 404 error will be returned.
 
 ```bash
 # Sample request
 curl -X GET 'https://jalapino-api.herokuapp.com/restaurants?page=1'
 ```
-```jsonc
+```json
 // Sample response
 [
   {
@@ -225,60 +225,46 @@ curl -X GET 'https://jalapino-api.herokuapp.com/restaurants?page=1'
 
 ---
 
-#### GET /categories/:id/questions
+### GET /restaurant/:id
 
 
-ℹ️ Returns all questions filtered by category id & paginated, in the specified format. The number of returned items per page is set to 10.<br>
-⚠️ If the ?page query parameter is beyond the number of available pages, an empty list of questions is returned.
+ℹ️ Returns the requested restaurant object by its ID or 404 if it is not found.
 
 ```bash
 # Sample request
-curl -X GET 'localhost:5000/categories/1/questions'
+curl -X GET 'https://jalapino-api.herokuapp.com/restaurants/1'
 ```
-```javascript
+```json
 // Sample response
 {
-  "current_category": {
-    "1": "Science"
-  }, 
-  "questions": [
-    {
-      "answer": "The Liver", 
-      "category": 1, 
-      "difficulty": 4, 
-      "id": 20, 
-      "question": "What is the heaviest organ in the human body?"
-    }, 
-    // 4 questions removed for brevity in this preview
-    {
-      "answer": "Jupiter", 
-      "category": 1, 
-      "difficulty": 1, 
-      "id": 26, 
-      "question": "What is largest planet in our solar system?"
-    }
-  ], 
-  "total_questions": 6
+  "description": "It's not all sunshine and BBQ!",
+  "email": "hello@nn-bbq.com",
+  "id": 1,
+  "logo_uri": "https://raw.githubusercontent.com/ant1fact/jalapino/main/static/images/food-g9be06d40f_640.jpg",
+  "name": "Not Necessarily BBQ",
+  "phone": "+1 202-918-2132",
+  "website": "www.nn-bbq.com",
+  "categories": [...] // Same format as in GET /restaurants
 }
 ```
 
 ---
 
-#### POST /questions  
+### POST /restaurants
 
-*Create a new question*
-
-ℹ️ Creates a new question in the database. Returns the questions produced by `GET /questions`
+ℹ️ Create a new restaurant in the database. On successful creation, it returns the ID of the new object with status code 201.  
+⚠️ The auth0 account used to create the new resource becomes the owner which will be required for any subsequent edits or deletion of the resource.
 
 ```bash
 # Sample request
-curl -X POST 'localhost:5000/questions' \
+curl -X POST 'https://jalapino-api.herokuapp.com/restaurants' \
 -H "Content-Type: application/json" \
--d '{"question": "Q", "answer": "A", "category": "1", "difficulty": 1}'
+-H "Authorization: Bearer <token>" \
+-d '{"name": "TEST_RESTAURANT", "email": "test-restaurant@test.com", "phone": "1-234-567890", "address": "111 Testreet, Testown"}'
 ```
-```javascript
+```json
 // Sample response
-// See above under GET /questions
+{"id": <id>}
 ```
 
 ---
@@ -405,7 +391,7 @@ createdb jalapino
 psql jalapino < jalapino.sql
 
 # Export environment variables
-source .env
+source env
 
 # Run the tests (Optional)
 python -m pytest

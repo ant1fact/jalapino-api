@@ -91,6 +91,7 @@ class Restaurant(db.Model):
     orders = db.relationship('Order', backref='restaurant')
 
     def serialize(self):
+        # Do not return orders as they are sensitive data
         return {
             'id': self.id,
             'name': self.name,
@@ -101,7 +102,6 @@ class Restaurant(db.Model):
             'description': self.description,
             'website': self.website,
             'categories': [c.serialize() for c in self.categories],
-            'orders': [o.serialize() for o in self.orders],
         }
 
 
