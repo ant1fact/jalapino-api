@@ -65,7 +65,10 @@ class CRUDModel(Model):
         }
 
 
-db = SQLAlchemy(model_class=CRUDModel, session_options={'autoflush': False})
+db = SQLAlchemy(
+    model_class=CRUDModel,
+    session_options={'autoflush': False, 'expire_on_commit': False},
+)
 
 
 class Restaurant(db.Model):
@@ -177,8 +180,8 @@ class Item(db.Model):
     ingredients = db.relationship(
         'Ingredient',
         secondary=items_ingredients,
-        lazy='subquery',
-        backref=db.backref('items', lazy=True),
+        lazy=False,
+        backref=db.backref('items', lazy=False),
     )
 
     def serialize(self):

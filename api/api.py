@@ -328,6 +328,7 @@ def create_item(payload: dict, id: int):
     # Add remaining data
     data = _prepare_request_data(Item)
     new_item.update(data)
+    new_item.category_id = id
 
     return {'id': new_item.save()}, 201
 
@@ -335,16 +336,15 @@ def create_item(payload: dict, id: int):
 @api.route('/items/<int:id>', methods=['PATCH', 'PUT'])
 @requires_auth('update:item')
 def update_item(payload: dict, id: int):
-    category = Category.query.get_or_404(id)
-    _verify_ownership(Restaurant, id=category.restaurant_id, auth0_id=payload['sub'])
     # Get existing item
     item = Item.query.get_or_404(id)
+    category = Category.query.get_or_404(item.category_id)
+    _verify_ownership(Restaurant, id=category.restaurant_id, auth0_id=payload['sub'])
     # Process ingredients
-    if request.get_json().get('ingredients', []):
-        item = _process_ingredient_names(item, request.json['ingredients'])
-    # Add remaining data
     data = _prepare_request_data(Item)
     item.update(data)
+    if request.get_json().get('ingredients', []):
+        item = _process_ingredient_names(item, request.json['ingredients'])
     item.save()
     return Response(status=200)
 

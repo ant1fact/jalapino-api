@@ -1,5 +1,5 @@
 from urllib import response
-from api.models import Category, Customer, Restaurant
+from api.models import Category, Customer, Item, Restaurant
 
 from conftest import create_app, make_auth_header
 
@@ -229,8 +229,7 @@ def test_pass_delete_category(client):
     with app.app_context():
         latest_id = max(c.id for c in Category.query.all())
         response = client.delete(
-            f'/categories/{latest_id}',
-            headers=make_auth_header('restaurant'),
+            f'/categories/{latest_id}', headers=make_auth_header('restaurant')
         )
         assert response.status_code == 200
 
@@ -239,8 +238,7 @@ def test_fail_delete_category(client):
     with app.app_context():
         latest_id = max(c.id for c in Category.query.all())
         response = client.delete(
-            f'/categories/{latest_id}',
-            headers=make_auth_header('customer'),
+            f'/categories/{latest_id}', headers=make_auth_header('customer')
         )
         assert response.status_code == 403
 
@@ -267,7 +265,6 @@ def test_pass_get_item(client):
     assert 'price' in response.json
 
 
-
 def test_fail_get_item(client):
     # Singular resource in URL
     response = client.get('/item/1')
@@ -275,27 +272,64 @@ def test_fail_get_item(client):
 
 
 def test_pass_create_item(client):
-    pass
+    with app.app_context():
+        num_items_before = Item.query.count()
+    new_item_data = {
+        'name': 'Bullseye',
+        'description': 'Not what it sounds.',
+        'price': 24.42,
+        'ingredients': ['bull', 'duh', 'saffron', 'turmeric']
+    }
+    response = client.post('/categories/1/items', json=new_item_data, headers=make_auth_header('restaurant'))
+    assert response.status_code == 201
+    with app.app_context():
+        num_items_before < Item.query.count()
 
 
 def test_fail_create_item(client):
-    pass
+    new_item_data = {
+        'name': 'Bullseye',
+        'ingredients': []
+    }
+    response = client.post('/categories/1/items', json=new_item_data)
+    assert response.status_code == 401
 
 
 def test_pass_update_item(client):
-    pass
+    put_item_data = {
+        'name': 'Catseye',
+        'description': "It was a bull, now it's a cat.",
+        'price': 42.24,
+        'ingredients': ['cat', 'nip', 'saffron', 'turmeric']
+    }
+    response = client.put('/items/1', json=put_item_data, headers=make_auth_header('restaurant'))
+    assert response.status_code == 200
+    with app.app_context():
+        assert Item.query.get_or_404(1).name == 'Catseye'
+
+
 
 
 def test_fail_update_item(client):
-    pass
+    with app.app_context():
+        latest_id = max(i.id for i in Item.query.all())
+        put_item_data = {
+            'name': 'Catseye',
+            'ingredients': ['cat', 'nip', 'saffron', 'turmeric']
+        }
+        response = client.put(f'/items/{latest_id}', json=put_item_data, headers=make_auth_header('restaurant'))
+        assert response.status_code == 400
 
 
 def test_pass_delete_item(client):
-    pass
-
+    with app.app_context():
+        latest_id = max(i.id for i in Item.query.all())
+        response = client.delete(f'/items/{latest_id}', headers=make_auth_header('restaurant'))
+        assert response.status_code == 200
 
 def test_fail_delete_item(client):
-    pass
+    response = client.delete('/items/3')
+    assert response.status_code == 401
 
 
 def test_pass_get_items_by_ingredient(client):
