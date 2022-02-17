@@ -25,10 +25,6 @@ Test accounts are provided for each of the two distinct user **roles**.
 <details>
 <summary><b>🔐 Reveal Credentials</b></summary>
 
-##### Test Customer #0 *($CUSTOMER_TOKEN)*
-```
-eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkJGV2Frc1dVRmlQRmpLd25fakotUSJ9.eyJpc3MiOiJodHRwczovL251bGxmYW1lLmV1LmF1dGgwLmNvbS8iLCJzdWIiOiJhdXRoMHw2MWY4NDkxNmJmMWRmOTAwNzEzN2QzNDciLCJhdWQiOiJqYWxhcGlubyIsImlhdCI6MTY0NTA0NzIzMiwiZXhwIjoxNjQ1MTMzNjMyLCJhenAiOiJRdFkxVnBYdjhWbUlYUjRxSDVYNUVWYk9kMnoyU042NSIsInNjb3BlIjoiIiwicGVybWlzc2lvbnMiOlsiY3JlYXRlOmN1c3RvbWVyIiwiY3JlYXRlOm9yZGVyIiwiZGVsZXRlOmN1c3RvbWVyIiwicmVhZDpjdXN0b21lciIsInJlYWQ6b3JkZXIiLCJ1cGRhdGU6Y3VzdG9tZXIiXX0.sMnbCY9V2TCJ21bY4pulrF16qDAqR98AYvjHFWAhkEp8WxLRWQ8xNP-YZ1MpyqmHr9SlWUbeWpd3dBiSXR4BBy-ZtMD2EXqwXbA1RDbr50IvVWjjpvvPMmFLQn2gXucKbjOf6FOPErEJ1F9_G-piM-DQ6SYPLoNlooHxb3LNdluTJz1KJPcZl5vRkDesO5_Vsq6-eMmLiX0j1obl03GSd0SQ-Bbrj0E7Iy7y84KU_VTAJt33qlI_BcNBH3Mhga0i7xUSsVyQp17LmRdmcacR6yo35Kw7vQkfHGzzu6R3oXEoUuEe3PXeSF6xydn9rMDUW8frl1z1lYtjTF__PGkeFQ
-```
 ##### Test Customer #1 *(Username & Password)*
 ```
 jalapino.test+customer1@gmail.com
@@ -39,10 +35,7 @@ Test+Customer123
 jalapino.test+customer2@gmail.com
 Test+Customer123
 ```
-##### Test Restaurant #0 *($RESTAURANT_TOKEN)*
-```
-eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkJGV2Frc1dVRmlQRmpLd25fakotUSJ9.eyJpc3MiOiJodHRwczovL251bGxmYW1lLmV1LmF1dGgwLmNvbS8iLCJzdWIiOiJhdXRoMHw2MWY4NDhkMTkwYjYwZjAwNzBmMmYyOTQiLCJhdWQiOiJqYWxhcGlubyIsImlhdCI6MTY0NTA0NzMwMCwiZXhwIjoxNjQ1MTMzNzAwLCJhenAiOiJRdFkxVnBYdjhWbUlYUjRxSDVYNUVWYk9kMnoyU042NSIsInNjb3BlIjoiIiwicGVybWlzc2lvbnMiOlsiY3JlYXRlOmNhdGVnb3J5IiwiY3JlYXRlOml0ZW0iLCJjcmVhdGU6cmVzdGF1cmFudCIsImRlbGV0ZTpjYXRlZ29yeSIsImRlbGV0ZTppdGVtIiwiZGVsZXRlOnJlc3RhdXJhbnQiLCJyZWFkOm9yZGVyIiwidXBkYXRlOmNhdGVnb3J5IiwidXBkYXRlOml0ZW0iLCJ1cGRhdGU6cmVzdGF1cmFudCJdfQ.a7vBj-t6pmG02Vx8IkDGi46_OcvbjmBT71H9-pKDS27U-BQFHV1z9dg167SxpiOU-2A3jNYlhPmtmSor_TlK0ZksO28JA7hH6VzugrFx6DT4pMRX_ZXjACkxDrRtv9uX1-FwQEAAasT8UlL1ZUaM8VYLD4jbeUfVdCqwrRcinKUEsxUBE9XrZXRoztOLPIUAMSXHzlZpCQ253meTioE3LgFaodRzNXndwiL8n_FgYH7CSB4B63SaMNMLrxR_g3eDX_zknUdX2Dt-zyt6oObejE_9Il4_tLhHCoqmczSryR03krKXYBuBTObL28_Z74qQGjwh0fWt8RKL8ZUpV2rgzg
-```
+
 ##### Test Restaurant #1 *(Username & Password)*
 ```
 jalapino.test+restaurant1@gmail.com
@@ -77,24 +70,19 @@ Test+Restaurant123
 `delete:item`
 `read:order`
 
-#### There are two ways to authenticate, you can use either one
-#### 🔐 1) Use the provided JWTs directly. To add them to your environment variables, run the following command:
+
+#### 🔐 Login with the credentials using the login prompt on the main page. Upon successful login the user will be redirected to a page that displays the newly generated JWT for the account.
+
+```
+https://jalapino-api.herokuapp.com
+```
+
+ℹ️ _Make sure to generate a new token this way if the existing one(s) don't work and update the **CUSTOMER_TOKEN** and **RESTAURANT_TOKEN** environment variables accordingly either by exporting them directly or adding them to env.sh_
+
 ```bash
 source env.sh
 $CUSTOMER_TOKEN
 $RESTAURANT_TOKEN
-```
-
-ℹ️ _These tokens have ownership of the preloaded resources in the DB, meaning that any pre-existing data in the DB can only be modified or deleted with these JWTs where the endpoint specifies "Requires ownership of the resource"_
-
----
-
-#### 🔐 2) Login with the credentials using the login prompt on the main page. Upon successful login the user will be redirected to a page that displays the newly generated JWT for the account.
-
-ℹ️ _Make sure to generate a new token this way if the existing one(s) don't work and update the **$CUSTOMER_TOKEN** and **$RESTAURANT_TOKEN** environment variables accordingly_
-
-```
-https://jalapino-api.herokuapp.com
 ```
 
 ---
