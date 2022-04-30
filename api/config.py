@@ -6,7 +6,13 @@ from os import getenv
 
 class Config:
     SECRET_KEY = getenv('CLIENT_SECRET')
-    SQLALCHEMY_DATABASE_URI = getenv('SQLALCHEMY_DATABASE_URI')
+    SQLALCHEMY_DATABASE_URI = getenv(
+        'SQLALCHEMY_DATABASE_URI',
+        # If SQLALCHEMY_DATABASE_URI is not found,
+        # take the path from DATABASE_URL, but replace the scheme
+        # as SQLAlchemy requires it to be postgresql instead of postgres
+        getenv('DATABASE_URL').replace('postgres:', 'postgresql:')
+    )
     SQLALCHEMY_RECORD_QUERIES = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     AUTH0_AUDIENCE = getenv('AUTH0_AUDIENCE')
